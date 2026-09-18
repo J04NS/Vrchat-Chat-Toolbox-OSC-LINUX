@@ -198,16 +198,18 @@ export function formatChatboxMessage(
     // AFK placeholders
     .replace(/\{afk_time\}/g, afkTimeStr)
     .replace(/\{afk_status\}/g, afkStatusStr)
-    // Rotating Freitexte & Custom Status
-    .replace(/\{freitext\}/g, activeRotatingText)
-    .replace(/\{text_cycle\}/g, activeRotatingText)
-    .replace(/\{custom_text\}/g, activeRotatingText || customStatus || '');
+    // Rotating Custom Texts & Custom Status
+    .replace(/\{custom_text\}/gi, activeRotatingText || customStatus || '')
+    .replace(/\{customtext\}/gi, activeRotatingText || customStatus || '')
+    .replace(/\{freitext\}/gi, activeRotatingText || customStatus || '')
+    .replace(/\{text_cycle\}/gi, activeRotatingText || customStatus || '');
 
-  // Replace indexed freitexte {freitext_1}, {freitext_2}, etc.
+  // Replace indexed custom texts {custom_text_1}, {freitext_1}, {customtext_1}, etc.
   if (customTexts && customTexts.length > 0) {
     customTexts.forEach((txt, idx) => {
-      const reg = new RegExp(`\\{freitext_${idx + 1}\\}`, 'g');
-      message = message.replace(reg, txt || '');
+      const num = idx + 1;
+      const regCustom = new RegExp(`\\{custom_text_${num}\\}|\\{customtext_${num}\\}|\\{freitext_${num}\\}`, 'gi');
+      message = message.replace(regCustom, txt || '');
     });
   }
 

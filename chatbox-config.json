@@ -26,8 +26,8 @@
     {
       "id": "profil_2_minimal_kein_puls_keine_medien",
       "name": "Profile 2: Minimal (No HR & No Media)",
-      "description": "No heart rate or music, status text & clock only",
-      "template": "💬 {freitext} | 🕒 {clock}",
+      "description": "No heart rate or music, custom text & clock only",
+      "template": "💬 {custom_text} | 🕒 {clock}",
       "isBuiltIn": true
     },
     {
@@ -55,7 +55,7 @@
       "id": "profil_6_full_hud",
       "name": "Profile 6: Full HUD (Everything)",
       "description": "Heart rate, music, hardware monitor & rotating custom texts",
-      "template": "❤️ {hr} BPM • 🎵 {song}\\n💻 {cpu} / {ram} • 💬 {freitext}",
+      "template": "❤️ {hr} BPM • 🎵 {song}\\n💻 {cpu} / {ram} • 💬 {custom_text}",
       "isBuiltIn": true
     }
   ],
@@ -64,9 +64,9 @@
   "profileRules": [
     {
       "id": "rule_music_no_hr",
-      "name": "Wenn Puls = Aus & Musik = An ➔ Profil 1 (Nur Musik)",
+      "name": "When HR = Off & Music = On ➔ Profile 1 (Music Only)",
       "enabled": true,
-      "targetProfileId": "profil_3_standard_puls_musik",
+      "targetProfileId": "profil_1_nur_musik",
       "conditions": {
         "heartRate": "false",
         "media": "true",
@@ -75,7 +75,7 @@
     },
     {
       "id": "rule_hr_and_music",
-      "name": "Wenn Puls = An & Musik = An ➔ Profil 3 (Standard Puls & Musik)",
+      "name": "When HR = On & Music = On ➔ Profile 3 (Standard HR & Music)",
       "enabled": true,
       "targetProfileId": "profil_3_standard_puls_musik",
       "conditions": {
@@ -86,7 +86,7 @@
     },
     {
       "id": "rule_hr_only",
-      "name": "Wenn Puls = An & Musik = Aus ➔ Profil 4 (Nur Puls)",
+      "name": "When HR = On & Music = Off ➔ Profile 4 (Heart Rate Only)",
       "enabled": true,
       "targetProfileId": "profil_4_nur_puls",
       "conditions": {
@@ -97,7 +97,7 @@
     },
     {
       "id": "rule_minimal_idle",
-      "name": "Wenn Puls = Aus & Musik = Aus ➔ Profil 2 (Minimal / Freitext)",
+      "name": "When HR = Off & Music = Off ➔ Profile 2 (Minimal / Custom Text)",
       "enabled": true,
       "targetProfileId": "profil_2_minimal_kein_puls_keine_medien",
       "conditions": {
@@ -108,7 +108,7 @@
     },
     {
       "id": "rule_afk_active",
-      "name": "Wenn AFK = An ➔ Profil 5 (Hardware & AFK)",
+      "name": "When AFK = On ➔ Profile 5 (Hardware & AFK)",
       "enabled": false,
       "targetProfileId": "profil_5_hardware_afk",
       "conditions": {
@@ -122,12 +122,12 @@
   "afkEnabled": false,
   "afkMode": "vrchat_and_timer",
   "afkTimeoutMinutes": 5,
-  "afkTemplate": "💤 AFK [{afk_time}] - Gleich wieder da! 💤",
+  "afkTemplate": "💤 AFK [{afk_time}] - Back soon! 💤",
   "afkOverrideChatbox": true,
   "customTexts": [
-    "Willkommen in meiner VRChat Instanz! ✨",
-    "VRChat OSC Hub läuft stabil auf Linux 🐧",
-    "Freitext-Rotation aktiv 🚀"
+    "Welcome to my VRChat world! ✨",
+    "VRChat OSC Hub running smoothly on Linux 🐧",
+    "Custom text cycling active 🚀"
   ],
   "customTextIntervalSec": 10,
   "language": "en"

@@ -23,7 +23,11 @@ export const CustomTextsCard: React.FC<CustomTextsCardProps> = ({
   onInsertMainVariable,
 }) => {
   const t = translations[lang];
-  const fallback = [lang === 'de' ? 'Willkommen in meiner VRChat Instanz! ✨' : 'Welcome to my VRChat instance! ✨'];
+  const fallback = [
+    'Welcome to my VRChat world! ✨',
+    'VRChat OSC Hub running smoothly on Linux 🐧',
+    'Custom text cycling active 🚀',
+  ];
   const initialTexts = customTexts && customTexts.length > 0 ? customTexts : fallback;
 
   const [localTexts, setLocalTexts] = useState<string[]>(initialTexts);
@@ -67,7 +71,7 @@ export const CustomTextsCard: React.FC<CustomTextsCardProps> = ({
 
   const handleAddText = () => {
     const nextNum = localTexts.length + 1;
-    const newTexts = [...localTexts, lang === 'de' ? `Mein Text ${nextNum}` : `My Text ${nextNum}`];
+    const newTexts = [...localTexts, `Custom Text ${nextNum}`];
     setLocalTexts(newTexts);
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -191,18 +195,18 @@ export const CustomTextsCard: React.FC<CustomTextsCardProps> = ({
                 onFocus={() => { isFocusedRef.current = true; }}
                 onBlur={handleTextBlur}
                 onChange={(e) => handleTextChange(idx, e.target.value)}
-                placeholder={lang === 'de' ? `Freitext ${tagIndex}...` : `Custom text ${tagIndex}...`}
+                placeholder={`Custom text ${tagIndex}...`}
                 className="flex-1 bg-transparent border-none text-xs text-white focus:outline-none px-2 py-1 placeholder:text-slate-600 font-sans"
               />
 
               {/* Quick Tag Copy Button */}
               <button
                 type="button"
-                onClick={() => onInsertMainVariable(`{freitext_${tagIndex}}`)}
+                onClick={() => onInsertMainVariable(`{custom_text_${tagIndex}}`)}
                 className="text-[10px] font-mono text-slate-400 hover:text-indigo-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 px-2 py-1 rounded-md transition-colors cursor-pointer shrink-0"
-                title={lang === 'de' ? `Fügt {freitext_${tagIndex}} in die Chatbox-Vorlage ein` : `Inserts {freitext_${tagIndex}} into chatbox template`}
+                title={lang === 'de' ? `Fügt {custom_text_${tagIndex}} in die Chatbox-Vorlage ein` : `Inserts {custom_text_${tagIndex}} into chatbox template`}
               >
-                {`{freitext_${tagIndex}}`}
+                {`{custom_text_${tagIndex}}`}
               </button>
 
               {/* Remove button */}
@@ -229,10 +233,10 @@ export const CustomTextsCard: React.FC<CustomTextsCardProps> = ({
         <div className="flex flex-wrap gap-1.5">
           <button
             type="button"
-            onClick={() => onInsertMainVariable('{freitext}')}
+            onClick={() => onInsertMainVariable('{custom_text}')}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-xs font-mono text-indigo-300 font-semibold transition-colors cursor-pointer shadow-sm"
           >
-            <span>{'{freitext}'}</span>
+            <span>{'{custom_text}'}</span>
             <span className="text-[10px] text-indigo-200/70 font-sans">({lang === 'de' ? 'Rotiert automatisch alle Texte' : 'Automatically rotates all texts'})</span>
           </button>
 
@@ -240,10 +244,10 @@ export const CustomTextsCard: React.FC<CustomTextsCardProps> = ({
             <button
               key={i}
               type="button"
-              onClick={() => onInsertMainVariable(`{freitext_${i + 1}}`)}
+              onClick={() => onInsertMainVariable(`{custom_text_${i + 1}}`)}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs font-mono text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
             >
-              <span>{`{freitext_${i + 1}}`}</span>
+              <span>{`{custom_text_${i + 1}}`}</span>
               <span className="text-[10px] text-slate-500 font-sans">({lang === 'de' ? `Fester Text ${i + 1}` : `Fixed Text ${i + 1}`})</span>
             </button>
           ))}

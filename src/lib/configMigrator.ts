@@ -20,8 +20,8 @@ const DEFAULT_PROFILES_DE: ChatboxProfile[] = [
   {
     id: 'profil_2_minimal_kein_puls_keine_medien',
     name: 'Profil 2: Minimal (Kein Puls & Keine Medien)',
-    description: 'Weder Puls noch Musik – reiner Status/Freitext & Uhrzeit',
-    template: '💬 {freitext} | 🕒 {clock}',
+    description: 'Weder Puls noch Musik – reiner Custom Text & Uhrzeit',
+    template: '💬 {custom_text} | 🕒 {clock}',
     isBuiltIn: true,
   },
   {
@@ -59,7 +59,7 @@ const DEFAULT_PROFILES_EN: ChatboxProfile[] = [
     id: 'profil_2_minimal_kein_puls_keine_medien',
     name: 'Profile 2: Minimal (No HR, No Media)',
     description: 'Shows status/custom text & clock when idle',
-    template: '💬 {freitext} | 🕒 {clock}',
+    template: '💬 {custom_text} | 🕒 {clock}',
     isBuiltIn: true,
   },
   {
@@ -247,9 +247,11 @@ export function migrateConfigJson(rawJson: any, targetLang: AppLanguage = 'en'):
   }
 
   if (customTexts.length === 0) {
-    customTexts = lang === 'de'
-      ? ['Willkommen in meiner VRChat Instanz! ✨', 'Gerne ansprechen oder joinen 🎧']
-      : ['Welcome to my VRChat instance! ✨', 'Feel free to follow for good vibes 🎧'];
+    customTexts = [
+      'Welcome to my VRChat world! ✨',
+      'VRChat OSC Hub running smoothly on Linux 🐧',
+      'Custom text cycling active 🚀',
+    ];
   }
 
   // 7. Profile Automation Rules

@@ -325,7 +325,7 @@ export const ProfileAutomationCard: React.FC<ProfileAutomationCardProps> = ({
                             : 'bg-slate-900 text-slate-400 border-slate-800'
                         }`}
                       >
-                        ❤️ Puls ={' '}
+                        ❤️ {lang === 'de' ? 'Puls' : 'HR'} ={' '}
                         {rule.conditions.heartRate === 'true'
                           ? t.profileAutomation.optTrue
                           : rule.conditions.heartRate === 'false'
@@ -343,7 +343,7 @@ export const ProfileAutomationCard: React.FC<ProfileAutomationCardProps> = ({
                             : 'bg-slate-900 text-slate-400 border-slate-800'
                         }`}
                       >
-                        🎵 Musik ={' '}
+                        🎵 {lang === 'de' ? 'Musik' : 'Media'} ={' '}
                         {rule.conditions.media === 'true'
                           ? t.profileAutomation.optTrue
                           : rule.conditions.media === 'false'

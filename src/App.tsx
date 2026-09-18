@@ -33,8 +33,9 @@ export default function App() {
     autoMediaDetection: true,
     mediaOnlyWhenPlaying: true,
     customTexts: [
-      'Welcome to my VRChat instance! ✨',
-      'Feel free to follow for good vibes 🎧',
+      'Welcome to my VRChat world! ✨',
+      'VRChat OSC Hub running smoothly on Linux 🐧',
+      'Custom text cycling active 🚀',
     ],
     customTextIntervalSec: 10,
     hardwareStatsEnabled: false,

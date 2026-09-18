@@ -30,8 +30,8 @@ const BUILT_IN_PROFILES_DE: ChatboxProfile[] = [
   {
     id: 'profil_2_minimal_kein_puls_keine_medien',
     name: 'Profil 2: Minimal (Kein Puls & Keine Medien)',
-    description: 'Weder Puls noch Musik – reiner Status/Freitext & Uhrzeit',
-    template: '💬 {freitext} | 🕒 {clock}',
+    description: 'Weder Puls noch Musik – reiner Custom Text & Uhrzeit',
+    template: '💬 {custom_text} | 🕒 {clock}',
     isBuiltIn: true,
   },
   {
@@ -58,8 +58,8 @@ const BUILT_IN_PROFILES_DE: ChatboxProfile[] = [
   {
     id: 'profil_6_full_hud',
     name: 'Profil 6: Volles HUD (Alles)',
-    description: 'Puls, Musik, Hardware-Monitor & rotierende Freitexte',
-    template: '❤️ {hr} BPM • 🎵 {song}\\n💻 {cpu} / {ram} • 💬 {freitext}',
+    description: 'Puls, Musik, Hardware-Monitor & rotierende Custom Texts',
+    template: '❤️ {hr} BPM • 🎵 {song}\\n💻 {cpu} / {ram} • 💬 {custom_text}',
     isBuiltIn: true,
   },
 ];
@@ -75,8 +75,8 @@ const BUILT_IN_PROFILES_EN: ChatboxProfile[] = [
   {
     id: 'profil_2_minimal_kein_puls_keine_medien',
     name: 'Profile 2: Minimal (No HR & No Media)',
-    description: 'No heart rate or music, status text & clock only',
-    template: '💬 {freitext} | 🕒 {clock}',
+    description: 'No heart rate or music, custom text & clock only',
+    template: '💬 {custom_text} | 🕒 {clock}',
     isBuiltIn: true,
   },
   {
@@ -104,7 +104,7 @@ const BUILT_IN_PROFILES_EN: ChatboxProfile[] = [
     id: 'profil_6_full_hud',
     name: 'Profile 6: Full HUD (Everything)',
     description: 'Heart rate, music, hardware monitor & rotating custom texts',
-    template: '❤️ {hr} BPM • 🎵 {song}\\n💻 {cpu} / {ram} • 💬 {freitext}',
+    template: '❤️ {hr} BPM • 🎵 {song}\\n💻 {cpu} / {ram} • 💬 {custom_text}',
     isBuiltIn: true,
   },
 ];
@@ -623,7 +623,7 @@ export const ChatboxSettingsCard: React.FC<ChatboxSettingsCardProps> = ({
               { tag: '{ram}', desc: t.chatbox.variables.ram },
               { tag: '{hw}', desc: t.chatbox.variables.hw },
               { tag: '{afk_time}', desc: t.chatbox.variables.afkTime },
-              { tag: '{freitext}', desc: t.chatbox.variables.freitext },
+              { tag: '{custom_text}', desc: t.chatbox.variables.freitext },
               { tag: '{clock}', desc: t.chatbox.variables.clock },
               { tag: '\\n', desc: t.chatbox.variables.newline },
             ].map((v) => (

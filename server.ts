@@ -47,8 +47,8 @@ const DEFAULT_PROFILES: ChatboxProfile[] = [
   {
     id: 'profil_2_minimal_kein_puls_keine_medien',
     name: 'Profile 2: Minimal (No HR & No Media)',
-    description: 'No heart rate or music, status text & clock only',
-    template: '💬 {freitext} | 🕒 {clock}',
+    description: 'No heart rate or music, custom text & clock only',
+    template: '💬 {custom_text} | 🕒 {clock}',
     isBuiltIn: true,
   },
   {
@@ -76,7 +76,7 @@ const DEFAULT_PROFILES: ChatboxProfile[] = [
     id: 'profil_6_full_hud',
     name: 'Profile 6: Full HUD (Everything)',
     description: 'Heart rate, music, hardware monitor & rotating custom texts',
-    template: '❤️ {hr} BPM • 🎵 {song}\\n💻 {cpu} / {ram} • 💬 {freitext}',
+    template: '❤️ {hr} BPM • 🎵 {song}\\n💻 {cpu} / {ram} • 💬 {custom_text}',
     isBuiltIn: true,
   },
 ];
@@ -85,7 +85,7 @@ const DEFAULT_PROFILES: ChatboxProfile[] = [
 export const DEFAULT_PROFILE_RULES: ProfileAutomationRule[] = [
   {
     id: 'rule_music_no_hr',
-    name: 'Wenn Puls = Aus & Musik = An ➔ Profil 1 (Nur Musik)',
+    name: 'When Heart Rate = Off & Music = On ➔ Profile 1 (Music Only)',
     enabled: true,
     targetProfileId: 'profil_1_nur_musik',
     conditions: {
@@ -96,7 +96,7 @@ export const DEFAULT_PROFILE_RULES: ProfileAutomationRule[] = [
   },
   {
     id: 'rule_hr_and_music',
-    name: 'Wenn Puls = An & Musik = An ➔ Profil 3 (Standard Puls & Musik)',
+    name: 'When Heart Rate = On & Music = On ➔ Profile 3 (Standard HR & Music)',
     enabled: true,
     targetProfileId: 'profil_3_standard_puls_musik',
     conditions: {
@@ -107,7 +107,7 @@ export const DEFAULT_PROFILE_RULES: ProfileAutomationRule[] = [
   },
   {
     id: 'rule_hr_only',
-    name: 'Wenn Puls = An & Musik = Aus ➔ Profil 4 (Nur Puls)',
+    name: 'When Heart Rate = On & Music = Off ➔ Profile 4 (HR Only)',
     enabled: true,
     targetProfileId: 'profil_4_nur_puls',
     conditions: {
@@ -118,7 +118,7 @@ export const DEFAULT_PROFILE_RULES: ProfileAutomationRule[] = [
   },
   {
     id: 'rule_minimal_idle',
-    name: 'Wenn Puls = Aus & Musik = Aus ➔ Profil 2 (Minimal / Freitext)',
+    name: 'When Heart Rate = Off & Music = Off ➔ Profile 2 (Minimal / Custom Text)',
     enabled: true,
     targetProfileId: 'profil_2_minimal_kein_puls_keine_medien',
     conditions: {
@@ -129,7 +129,7 @@ export const DEFAULT_PROFILE_RULES: ProfileAutomationRule[] = [
   },
   {
     id: 'rule_afk_active',
-    name: 'Wenn AFK = An ➔ Profil 5 (Hardware & AFK)',
+    name: 'When AFK = On ➔ Profile 5 (Hardware & AFK)',
     enabled: false,
     targetProfileId: 'profil_5_hardware_afk',
     conditions: {
@@ -199,21 +199,21 @@ const hyperateState: ProviderHeartRateState = {
   bpm: 0,
   connected: false,
   lastUpdated: 0,
-  deviceLabel: 'HypeRate (Warte auf Verbindung)',
+  deviceLabel: 'HypeRate (Waiting for connection)',
 };
 
 const pulsoidState: ProviderHeartRateState = {
   bpm: 0,
   connected: false,
   lastUpdated: 0,
-  deviceLabel: 'Pulsoid Feed (Warte auf Verbindung)',
+  deviceLabel: 'Pulsoid Feed (Waiting for connection)',
 };
 
 const bluetoothState: ProviderHeartRateState = {
   bpm: 0,
   connected: false,
   lastUpdated: 0,
-  deviceLabel: 'Bluetooth BLE (Warte auf Verbindung)',
+  deviceLabel: 'Bluetooth BLE (Waiting for connection)',
 };
 
 // Get the currently active effective Heart Rate state
