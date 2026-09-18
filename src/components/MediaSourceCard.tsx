@@ -1,39 +1,43 @@
 import React, { useState } from 'react';
-import { Music, Play, Pause, Disc, Terminal, Check, Copy, Sliders } from 'lucide-react';
-import { MediaState } from '../types';
+import { Music, Play, Pause, Radio, Disc, Sparkles } from 'lucide-react';
+import { MediaState, AppLanguage } from '../types';
+import { translations } from '../lib/i18n';
 
 interface MediaSourceCardProps {
+  lang?: AppLanguage;
   mediaState: MediaState;
+  autoMediaDetection?: boolean;
+  mediaOnlyWhenPlaying?: boolean;
   onUpdateMedia: (data: Partial<MediaState>) => void;
+  onUpdateConfig: (data: { autoMediaDetection?: boolean; mediaOnlyWhenPlaying?: boolean }) => void;
   serverPort: number;
 }
 
 export const MediaSourceCard: React.FC<MediaSourceCardProps> = ({
+  lang = 'en',
   mediaState,
+  autoMediaDetection = true,
+  mediaOnlyWhenPlaying = true,
   onUpdateMedia,
-  serverPort,
+  onUpdateConfig,
 }) => {
-  const [activeTab, setActiveTab] = useState<'status' | 'linux-mpris'>('status');
-  const [copied, setCopied] = useState(false);
-
-  const mprisCommand = `playerctl metadata --format '{"title":"{{title}}","artist":"{{artist}}","status":"{{status}}"}' | curl -X POST -H "Content-Type: application/json" -d @- http://localhost:${serverPort || 9090}/api/media/now-playing`;
-
-  const copyCommand = () => {
-    navigator.clipboard.writeText(mprisCommand);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const t = translations[lang];
+  const [manualTitle, setManualTitle] = useState(mediaState.title);
+  const [manualArtist, setManualArtist] = useState(mediaState.artist);
 
   const handleTogglePlay = () => {
     onUpdateMedia({ isPlaying: !mediaState.isPlaying });
   };
 
-  const presets = [
-    { title: 'Starlight', artist: 'Muse' },
-    { title: 'Resonance', artist: 'HOME' },
-    { title: 'Around the World', artist: 'Daft Punk' },
-    { title: 'Clair de Lune', artist: 'Debussy' },
-  ];
+  const handleSaveManual = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdateMedia({
+      title: manualTitle.trim(),
+      artist: manualArtist.trim(),
+      isPlaying: true,
+      sourceName: lang === 'de' ? 'Manuell' : 'Manual',
+    });
+  };
 
   return (
     <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl backdrop-blur-md">
@@ -45,9 +49,9 @@ export const MediaSourceCard: React.FC<MediaSourceCardProps> = ({
           </div>
           <div>
             <h2 className="text-sm font-semibold tracking-wide text-slate-100 flex items-center gap-2">
-              Musikquellen & Now Playing
+              {t.media.title}
             </h2>
-            <p className="text-xs text-slate-400">Spotify, Browser, Linux MPRIS oder benutzerdefinierter Titel</p>
+            <p className="text-xs text-slate-400">{t.media.subtitle}</p>
           </div>
         </div>
 
@@ -62,126 +66,84 @@ export const MediaSourceCard: React.FC<MediaSourceCardProps> = ({
           }`}
         >
           {mediaState.isPlaying ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />}
-          {mediaState.isPlaying ? 'Wiedergabe' : 'Pausiert'}
+          {mediaState.isPlaying ? t.media.nowPlaying : t.media.stopped}
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950 rounded-xl mb-4 border border-slate-800/80">
-        <button
-          id="tab-media-current"
-          type="button"
-          onClick={() => setActiveTab('status')}
-          className={`px-3 py-2 text-xs font-medium rounded-lg transition-all cursor-pointer ${
-            activeTab === 'status'
-              ? 'bg-blue-600 text-white shadow'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-          }`}
-        >
-          Titel & Bearbeiten
-        </button>
-        <button
-          id="tab-media-linux"
-          type="button"
-          onClick={() => setActiveTab('linux-mpris')}
-          className={`px-3 py-2 text-xs font-medium rounded-lg transition-all cursor-pointer ${
-            activeTab === 'linux-mpris'
-              ? 'bg-blue-600 text-white shadow'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-          }`}
-        >
-          Linux MPRIS / playerctl
-        </button>
+      {/* Auto-Detection status banner */}
+      <div className="space-y-4">
+        <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-2.5 h-2.5 rounded-full ${mediaState.isPlaying ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
+            <div>
+              <div className="text-xs font-semibold text-white">
+                {mediaState.isPlaying && mediaState.title
+                  ? `${mediaState.title} ${mediaState.artist ? `• ${mediaState.artist}` : ''}`
+                  : t.media.noMedia}
+              </div>
+              <div className="text-[11px] text-slate-400">
+                {t.media.sourceLabel}: {mediaState.sourceName || 'playerctl'} | Status: {mediaState.isPlaying ? t.media.nowPlaying : t.media.stopped}
+              </div>
+            </div>
+          </div>
+
+          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-950/60 text-blue-300 border border-blue-800/40">
+            {mediaState.isPlaying ? 'LIVE' : 'IDLE'}
+          </span>
+        </div>
+
+        {/* Toggles */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <label className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
+            <span className="text-xs text-slate-300 font-medium">{t.media.autoDetectToggle}</span>
+            <input
+              id="toggle-auto-media"
+              type="checkbox"
+              checked={autoMediaDetection}
+              onChange={(e) => onUpdateConfig({ autoMediaDetection: e.target.checked })}
+              className="w-4 h-4 rounded text-blue-600 bg-slate-900 border-slate-700 cursor-pointer"
+            />
+          </label>
+
+          <label className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
+            <span className="text-xs text-slate-300 font-medium">{t.media.onlyWhenPlayingToggle}</span>
+            <input
+              id="toggle-media-only-playing"
+              type="checkbox"
+              checked={mediaOnlyWhenPlaying}
+              onChange={(e) => onUpdateConfig({ mediaOnlyWhenPlaying: e.target.checked })}
+              className="w-4 h-4 rounded text-blue-600 bg-slate-900 border-slate-700 cursor-pointer"
+            />
+          </label>
+        </div>
+
+        {/* Quick manual override if needed */}
+        <form onSubmit={handleSaveManual} className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
+          <input
+            id="input-media-title"
+            type="text"
+            value={manualTitle}
+            onChange={(e) => setManualTitle(e.target.value)}
+            placeholder={t.media.titleLabel}
+            className="sm:col-span-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+          />
+          <input
+            id="input-media-artist"
+            type="text"
+            value={manualArtist}
+            onChange={(e) => setManualArtist(e.target.value)}
+            placeholder={t.media.artistLabel}
+            className="sm:col-span-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+          />
+          <button
+            id="btn-apply-manual-media"
+            type="submit"
+            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-xl transition-all cursor-pointer border border-slate-700"
+          >
+            {t.media.saveMediaBtn}
+          </button>
+        </form>
       </div>
-
-      {activeTab === 'status' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Songtitel</label>
-              <input
-                id="input-media-title"
-                type="text"
-                value={mediaState.title}
-                onChange={(e) => onUpdateMedia({ title: e.target.value })}
-                placeholder="z.B. Blinding Lights"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Künstler / Interpret</label>
-              <input
-                id="input-media-artist"
-                type="text"
-                value={mediaState.artist}
-                onChange={(e) => onUpdateMedia({ artist: e.target.value })}
-                placeholder="z.B. The Weeknd"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Quick Presets */}
-          <div>
-            <span className="block text-[11px] font-medium text-slate-400 mb-1.5">Schnellauswahl Test-Songs:</span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {presets.map((preset) => (
-                <button
-                  key={preset.title}
-                  type="button"
-                  onClick={() => onUpdateMedia({ title: preset.title, artist: preset.artist, isPlaying: true })}
-                  className="px-2.5 py-1.5 text-left bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs text-slate-300 transition-colors cursor-pointer truncate"
-                >
-                  <div className="font-semibold text-white truncate">{preset.title}</div>
-                  <div className="text-[10px] text-slate-400 truncate">{preset.artist}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <Disc className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
-              Quelle: <span className="text-slate-200">{mediaState.sourceName || 'Lokal / Eingabe'}</span>
-            </span>
-            <span>
-              Chatbox Variable: <code className="bg-slate-900 px-1.5 py-0.5 rounded text-indigo-300">{'{song}'}</code>
-            </span>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'linux-mpris' && (
-        <div className="space-y-3">
-          <p className="text-xs text-slate-300">
-            Unter Linux kannst du laufende Musik aus Spotify, VLC, Firefox oder Chromium mit dem MPRIS-Standard automatisch auslesen:
-          </p>
-
-          <div className="relative p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] text-slate-300 overflow-x-auto">
-            <code>{mprisCommand}</code>
-            <button
-              id="btn-copy-mpris"
-              type="button"
-              onClick={copyCommand}
-              className="absolute top-2 right-2 p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all cursor-pointer"
-              title="Befehl in Zwischenablage kopieren"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-
-          <div className="p-3 rounded-xl bg-blue-950/30 border border-blue-800/40 text-[11px] text-blue-200 space-y-1">
-            <div className="font-semibold flex items-center gap-1.5">
-              <Terminal className="w-3.5 h-3.5 text-blue-400" />
-              Automatischer Dauer-Watcher:
-            </div>
-            <p>
-              Führe im Projektverzeichnis einfach <code className="bg-blue-900/60 px-1 py-0.5 rounded">./playerctl-watcher.sh</code> aus. Bei jedem Songwechsel sendet Linux die Metadaten direkt an die VRChat Chatbox!
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

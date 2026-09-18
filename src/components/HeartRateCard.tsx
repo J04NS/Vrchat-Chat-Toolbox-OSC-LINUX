@@ -1,45 +1,124 @@
-import React, { useState } from 'react';
-import { Heart, Activity, ShieldCheck, Bluetooth, HelpCircle, CheckCircle2, AlertCircle } from 'lucide-react';
-import { HeartRateProvider, HeartRateState } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Heart, Activity, CheckCircle2, Bluetooth, Sliders, ExternalLink, X, AlertCircle } from 'lucide-react';
+import { HeartRateProvider, HeartRateState, AppLanguage } from '../types';
 import { getBpmZoneName, getHeartIcon } from '../lib/formatter';
+import { translations } from '../lib/i18n';
 
 interface HeartRateCardProps {
+  lang?: AppLanguage;
   hrState: HeartRateState;
   hyperateSessionId: string;
+  hyperateRelayUrl?: string;
   pulsoidToken: string;
+  heartRateProvider?: HeartRateProvider;
   hasHyperateApiKey: boolean;
   hyperateKeyMasked: string;
   hyperateConnected: boolean;
-  onUpdateConfig: (data: { hyperateSessionId?: string; pulsoidToken?: string }) => void;
+  pulsoidConnected?: boolean;
+  onUpdateConfig: (data: {
+    hyperateSessionId?: string;
+    hyperateRelayUrl?: string;
+    pulsoidToken?: string;
+    heartRateProvider?: HeartRateProvider;
+  }) => void;
   onUpdateHrState: (data: { bpm: number; provider?: HeartRateProvider; deviceLabel?: string }) => void;
 }
 
 export const HeartRateCard: React.FC<HeartRateCardProps> = ({
+  lang = 'en',
   hrState,
   hyperateSessionId,
+  hyperateRelayUrl = '',
   pulsoidToken,
+  heartRateProvider,
   hasHyperateApiKey,
   hyperateKeyMasked,
   hyperateConnected,
+  pulsoidConnected = false,
   onUpdateConfig,
   onUpdateHrState,
 }) => {
-  const [activeTab, setActiveTab] = useState<HeartRateProvider>(hrState.provider || 'hyperate');
+  const t = translations[lang];
+  const [activeTab, setActiveTab] = useState<HeartRateProvider>(
+    heartRateProvider || hrState.provider || 'hyperate'
+  );
   const [sessionIdInput, setSessionIdInput] = useState(hyperateSessionId || '');
   const [pulsoidInput, setPulsoidInput] = useState(pulsoidToken || '');
+  const [relayUrlInput, setRelayUrlInput] = useState(hyperateRelayUrl || '');
+  const [showRelaySettings, setShowRelaySettings] = useState(Boolean(hyperateRelayUrl));
   const [isConnectingBle, setIsConnectingBle] = useState(false);
   const [bleError, setBleError] = useState<string | null>(null);
+  const [pulsoidSavedNotice, setPulsoidSavedNotice] = useState(false);
+  const [hyperateSavedNotice, setHyperateSavedNotice] = useState(false);
+
+  useEffect(() => {
+    if (heartRateProvider && heartRateProvider !== activeTab) {
+      setActiveTab(heartRateProvider);
+    }
+  }, [heartRateProvider]);
+
+  useEffect(() => {
+    if (hyperateSessionId !== undefined && hyperateSessionId !== sessionIdInput) {
+      setSessionIdInput(hyperateSessionId);
+    }
+  }, [hyperateSessionId]);
+
+  useEffect(() => {
+    if (pulsoidToken !== undefined && pulsoidToken !== pulsoidInput) {
+      setPulsoidInput(pulsoidToken);
+    }
+  }, [pulsoidToken]);
+
+  useEffect(() => {
+    if (hyperateRelayUrl !== undefined && hyperateRelayUrl !== relayUrlInput) {
+      setRelayUrlInput(hyperateRelayUrl);
+    }
+  }, [hyperateRelayUrl]);
+
+  const handleTabChange = (tab: HeartRateProvider) => {
+    setActiveTab(tab);
+    onUpdateConfig({ heartRateProvider: tab });
+    onUpdateHrState({
+      bpm: hrState.bpm,
+      provider: tab,
+      deviceLabel: tab === 'pulsoid' ? 'Pulsoid Feed' : tab === 'hyperate' ? 'HypeRate' : tab,
+    });
+  };
 
   const handleSaveHyperate = (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateConfig({ hyperateSessionId: sessionIdInput.trim().toUpperCase() });
-    onUpdateHrState({ bpm: hrState.bpm, provider: 'hyperate', deviceLabel: `HypeRate (${sessionIdInput.trim()})` });
+    const cleanSession = sessionIdInput.trim();
+    const cleanRelay = relayUrlInput.trim();
+    onUpdateConfig({
+      hyperateSessionId: cleanSession,
+      hyperateRelayUrl: cleanRelay,
+      heartRateProvider: 'hyperate',
+    });
+    onUpdateHrState({
+      bpm: hrState.bpm,
+      provider: 'hyperate',
+      deviceLabel: cleanRelay ? `Pelikan Relay (${cleanSession})` : `HypeRate (${cleanSession})`,
+    });
+    setActiveTab('hyperate');
+    setHyperateSavedNotice(true);
+    setTimeout(() => setHyperateSavedNotice(false), 3000);
   };
 
   const handleSavePulsoid = (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateConfig({ pulsoidToken: pulsoidInput.trim() });
-    onUpdateHrState({ bpm: hrState.bpm, provider: 'pulsoid', deviceLabel: 'Pulsoid Feed' });
+    const cleanToken = pulsoidInput.trim();
+    onUpdateConfig({
+      pulsoidToken: cleanToken,
+      heartRateProvider: 'pulsoid',
+    });
+    onUpdateHrState({
+      bpm: hrState.bpm,
+      provider: 'pulsoid',
+      deviceLabel: cleanToken ? 'Pulsoid Feed' : 'Pulsoid (Kein Token)',
+    });
+    setActiveTab('pulsoid');
+    setPulsoidSavedNotice(true);
+    setTimeout(() => setPulsoidSavedNotice(false), 3000);
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,12 +172,12 @@ export const HeartRateCard: React.FC<HeartRateCardProps> = ({
     } catch (err: any) {
       setIsConnectingBle(false);
       if (err.name !== 'NotFoundError') {
-        setBleError(err.message || 'Verbindung fehlgeschlagen');
+        setBleError(err.message || (lang === 'de' ? 'Verbindung fehlgeschlagen' : 'Connection failed'));
       }
     }
   };
 
-  const currentZone = getBpmZoneName(hrState.bpm);
+  const currentZone = getBpmZoneName(hrState.bpm, lang);
 
   return (
     <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl backdrop-blur-md">
@@ -110,12 +189,14 @@ export const HeartRateCard: React.FC<HeartRateCardProps> = ({
           </div>
           <div>
             <h2 className="text-sm font-semibold tracking-wide text-slate-100 flex items-center gap-2">
-              Herzfrequenz & Puls
-              <span className="text-[11px] font-normal px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
-                {currentZone}
-              </span>
+              {t.heartRate.title}
+              {hrState.bpm > 0 && (
+                <span className="text-[11px] font-normal px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                  {currentZone}
+                </span>
+              )}
             </h2>
-            <p className="text-xs text-slate-400">HypeRate, Pulsoid oder Bluetooth direkt an VRChat senden</p>
+            <p className="text-xs text-slate-400">{t.heartRate.subtitle}</p>
           </div>
         </div>
 
@@ -134,82 +215,67 @@ export const HeartRateCard: React.FC<HeartRateCardProps> = ({
         <button
           id="tab-hr-hyperate"
           type="button"
-          onClick={() => setActiveTab('hyperate')}
+          onClick={() => handleTabChange('hyperate')}
           className={`px-3 py-2 text-xs font-medium rounded-lg transition-all cursor-pointer ${
             activeTab === 'hyperate'
               ? 'bg-blue-600 text-white shadow'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
           }`}
         >
-          HypeRate
+          {t.heartRate.tabs.hyperate}
         </button>
         <button
           id="tab-hr-pulsoid"
           type="button"
-          onClick={() => setActiveTab('pulsoid')}
+          onClick={() => handleTabChange('pulsoid')}
           className={`px-3 py-2 text-xs font-medium rounded-lg transition-all cursor-pointer ${
             activeTab === 'pulsoid'
               ? 'bg-blue-600 text-white shadow'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
           }`}
         >
-          Pulsoid
+          {t.heartRate.tabs.pulsoid}
         </button>
         <button
           id="tab-hr-bluetooth"
           type="button"
-          onClick={() => setActiveTab('bluetooth')}
+          onClick={() => handleTabChange('bluetooth')}
           className={`px-3 py-2 text-xs font-medium rounded-lg transition-all cursor-pointer ${
             activeTab === 'bluetooth'
               ? 'bg-blue-600 text-white shadow'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
           }`}
         >
-          Bluetooth BLE
+          {t.heartRate.tabs.ble}
         </button>
         <button
           id="tab-hr-manual"
           type="button"
-          onClick={() => setActiveTab('manual')}
+          onClick={() => handleTabChange('manual')}
           className={`px-3 py-2 text-xs font-medium rounded-lg transition-all cursor-pointer ${
             activeTab === 'manual'
               ? 'bg-blue-600 text-white shadow'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
           }`}
         >
-          Simulator
+          {t.heartRate.tabs.sim}
         </button>
       </div>
 
       {/* Tab: HypeRate */}
       {activeTab === 'hyperate' && (
-        <form onSubmit={handleSaveHyperate} className="space-y-4">
-          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                HypeRate API-Schlüssel
-              </span>
-              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50">
-                {hasHyperateApiKey ? hyperateKeyMasked : 'Nicht konfiguriert'}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400">
-              Der API-Key ist server-seitig hinterlegt und wird niemals im Quelltext oder an Dritte im Browser übertragen.
-            </p>
-          </div>
-
+        <form onSubmit={handleSaveHyperate} className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              HypeRate Session-ID
+              {t.heartRate.hyperate.sessionLabel}
             </label>
             <div className="flex gap-2">
               <input
                 id="input-hyperate-session"
                 type="text"
-                placeholder="z.B. 4-6 stelliger Code aus der HypeRate App"
+                placeholder={t.heartRate.hyperate.sessionPlaceholder}
                 value={sessionIdInput}
-                onChange={(e) => setSessionIdInput(e.target.value.toUpperCase())}
+                onChange={(e) => setSessionIdInput(e.target.value)}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
               />
               <button
@@ -217,15 +283,63 @@ export const HeartRateCard: React.FC<HeartRateCardProps> = ({
                 type="submit"
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
               >
-                Verbinden
+                {t.heartRate.hyperate.connectBtn}
               </button>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1.5">
-              Öffne HypeRate auf deiner Apple Watch, WearOS, Garmin oder Handy und trage hier die angezeigte ID ein.
-            </p>
           </div>
 
-          <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800/70 text-xs">
+          {/* Relay Server Toggle & Field */}
+          <div className="pt-0.5">
+            <button
+              type="button"
+              onClick={() => setShowRelaySettings(!showRelaySettings)}
+              className="text-[11px] text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 cursor-pointer font-medium"
+            >
+              <span>{showRelaySettings ? '▼' : '▶'} {t.heartRate.hyperate.relayServerLabel}</span>
+            </button>
+
+            {showRelaySettings && (
+              <div className="mt-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-medium text-slate-300">
+                    Relay WebSocket URL:
+                  </label>
+                  {relayUrlInput ? (
+                    <button
+                      type="button"
+                      onClick={() => setRelayUrlInput('')}
+                      className="text-[10px] text-amber-400 hover:text-amber-300 cursor-pointer"
+                    >
+                      {lang === 'de' ? 'Auf Standard zurücksetzen' : 'Reset to Default'}
+                    </button>
+                  ) : (
+                    <span className="text-[10px] text-emerald-400 font-medium">
+                      ✓ {lang === 'de' ? 'Standard-Server aktiv (Geschützt)' : 'Default Relay Active (Protected)'}
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder={t.heartRate.hyperate.relayPlaceholder}
+                  value={relayUrlInput}
+                  onChange={(e) => setRelayUrlInput(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+                />
+                <p className="text-[10px] text-slate-400">
+                  {t.heartRate.hyperate.relayNotice}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {hyperateSavedNotice && (
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-800/80 text-xs text-emerald-300">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{lang === 'de' ? 'HypeRate Session gespeichert & verbunden!' : 'HypeRate session saved & connected!'}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
             <div className="flex items-center gap-2">
               {hyperateConnected ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -233,44 +347,121 @@ export const HeartRateCard: React.FC<HeartRateCardProps> = ({
                 <Activity className="w-4 h-4 text-slate-400 animate-pulse" />
               )}
               <span className="text-slate-300 font-medium">Status:</span>
-              <span className={hyperateConnected ? 'text-emerald-400' : 'text-slate-400'}>
+              <span className={hyperateConnected ? 'text-emerald-400 font-medium' : 'text-slate-400'}>
                 {hyperateConnected
-                  ? `Verbunden mit Session ${hyperateSessionId || sessionIdInput}`
+                  ? `${t.common.connected} (Session: ${hyperateSessionId || sessionIdInput})`
                   : sessionIdInput
-                  ? 'Warte auf Verbindung...'
-                  : 'Keine Session eingetragen'}
+                  ? t.heartRate.hyperate.connecting
+                  : (lang === 'de' ? 'Keine Session eingetragen' : 'No Session ID entered')}
               </span>
             </div>
+
+            <span className="text-[11px] font-mono text-slate-500">
+              Key: {hyperateKeyMasked}
+            </span>
           </div>
         </form>
       )}
 
       {/* Tab: Pulsoid */}
       {activeTab === 'pulsoid' && (
-        <form onSubmit={handleSavePulsoid} className="space-y-4">
+        <form onSubmit={handleSavePulsoid} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Pulsoid Feed Token oder Widget ID
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="input-pulsoid-token"
-                type="text"
-                placeholder="Pulsoid Feed ID / Token eingeben"
-                value={pulsoidInput}
-                onChange={(e) => setPulsoidInput(e.target.value)}
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
-              />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-medium text-slate-300">
+                {t.heartRate.pulsoid.tokenLabel}
+              </label>
+              <a
+                href="https://pulsoid.net/ui/keys"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium transition-colors"
+              >
+                <span>{t.heartRate.pulsoid.tokenLink}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            <div className="flex gap-2 relative">
+              <div className="relative flex-1">
+                <input
+                  id="input-pulsoid-token"
+                  type="text"
+                  placeholder={t.heartRate.pulsoid.tokenPlaceholder}
+                  value={pulsoidInput}
+                  onChange={(e) => setPulsoidInput(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 pr-8 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+                />
+                {pulsoidInput && (
+                  <button
+                    type="button"
+                    onClick={() => setPulsoidInput('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-0.5 rounded cursor-pointer"
+                    title="Clear"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
               <button
                 id="btn-save-pulsoid"
                 type="submit"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
               >
-                Speichern
+                {t.common.save}
               </button>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1.5">
-              Erstelle einen Widget-Link auf pulsoid.net und kopiere die ID oder den Zugriffstoken.
+          </div>
+
+          {pulsoidSavedNotice && (
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-800/80 text-xs text-emerald-300">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{t.heartRate.pulsoid.savedNotification}</span>
+            </div>
+          )}
+
+          {/* Pulsoid Status Row */}
+          <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
+            <div className="flex items-center gap-2">
+              {pulsoidConnected ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              ) : pulsoidInput ? (
+                <Activity className="w-4 h-4 text-blue-400 animate-pulse shrink-0" />
+              ) : (
+                <Activity className="w-4 h-4 text-slate-500 shrink-0" />
+              )}
+              <span className="text-slate-300 font-medium">Status:</span>
+              <span className={pulsoidConnected ? 'text-emerald-400 font-medium' : pulsoidInput ? 'text-blue-400' : 'text-slate-400'}>
+                {pulsoidConnected
+                  ? `${t.heartRate.pulsoid.statusConnected}`
+                  : pulsoidInput
+                  ? (hrState.error && hrState.provider === 'pulsoid' ? hrState.error : t.heartRate.pulsoid.statusConnecting)
+                  : t.heartRate.pulsoid.noTokenEntered}
+              </span>
+            </div>
+
+            {hrState.bpm > 0 && hrState.provider === 'pulsoid' && (
+              <span className="text-[11px] font-mono text-emerald-400 font-bold">
+                {hrState.bpm} BPM
+              </span>
+            )}
+          </div>
+
+          {hrState.error && hrState.provider === 'pulsoid' && (
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-rose-950/40 border border-rose-900/60 text-xs text-rose-300">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{hrState.error}</span>
+            </div>
+          )}
+
+          {/* Helpful Help Box */}
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/70 text-xs text-slate-400 space-y-1.5">
+            <p className="leading-relaxed text-slate-300">
+              {t.heartRate.pulsoid.tokenHelp}
+            </p>
+            <p className="text-[11px] text-slate-500 leading-normal">
+              {lang === 'de'
+                ? '💡 Unterstützt Access-Tokens oder Feed-URLs (z.B. wss://dev.pulsoid.net/api/v1/data/real_time?access_token=... oder Widget-URLs). Der Pelikan Hub bleibt dauerhaft verbunden und streamt den Puls per OSC an VRChat.'
+                : '💡 Supports Access Tokens or Feed URLs (e.g. wss://dev.pulsoid.net/api/v1/data/real_time?access_token=... or widget URLs). Pelikan Hub stays permanently connected and streams heart rate to VRChat via OSC.'}
             </p>
           </div>
         </form>
@@ -279,80 +470,42 @@ export const HeartRateCard: React.FC<HeartRateCardProps> = ({
       {/* Tab: Bluetooth LE */}
       {activeTab === 'bluetooth' && (
         <div className="space-y-3">
-          <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs text-slate-300">
-            <p className="mb-2">
-              Verbinde deinen Brustgurt (z. B. Polar H10, Garmin HRM-Pro, Wahoo TICKR, CooSpo) direkt per Web Bluetooth LE.
-            </p>
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <div>
+              <div className="text-xs font-semibold text-white">{t.heartRate.ble.title}</div>
+              <div className="text-[11px] text-slate-400">{t.heartRate.ble.desc}</div>
+            </div>
             <button
               id="btn-connect-ble"
               type="button"
-              onClick={connectBluetoothLE}
               disabled={isConnectingBle}
-              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white font-medium rounded-xl transition-all cursor-pointer"
+              onClick={connectBluetoothLE}
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
             >
-              <Bluetooth className="w-4 h-4" />
-              {isConnectingBle ? 'Suche nach Bluetooth-Geräten...' : 'Bluetooth Brustgurt koppeln'}
+              <Bluetooth className="w-3.5 h-3.5" />
+              {isConnectingBle ? (lang === 'de' ? 'Suche...' : 'Scanning...') : t.heartRate.ble.connectBtn}
             </button>
           </div>
-
-          {bleError && (
-            <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-800/40 text-rose-300 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-              <span>{bleError}</span>
-            </div>
-          )}
+          {bleError && <div className="text-xs text-rose-400 p-2 rounded bg-rose-950/40 border border-rose-900/40">{bleError}</div>}
         </div>
       )}
 
-      {/* Tab: Simulator / Slider */}
+      {/* Tab: Simulator */}
       {activeTab === 'manual' && (
-        <div className="space-y-4">
-          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-xs font-medium text-slate-300">Puls Simulator Regler</label>
-              <span className="text-sm font-mono font-bold text-rose-400">{hrState.bpm} BPM</span>
-            </div>
-
-            <input
-              id="slider-bpm-test"
-              type="range"
-              min="40"
-              max="210"
-              value={hrState.bpm || 70}
-              onChange={handleSliderChange}
-              className="w-full accent-rose-500 cursor-pointer h-2 bg-slate-800 rounded-lg"
-            />
-
-            <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
-              <span>40 BPM</span>
-              <span>100 BPM</span>
-              <span>160 BPM</span>
-              <span>210 BPM</span>
-            </div>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center text-xs text-slate-300">
+            <span>{t.heartRate.sim.sliderLabel}:</span>
+            <span className="font-bold text-rose-400 font-mono text-sm">{hrState.bpm} BPM</span>
           </div>
-
-          {/* Quick Preset Buttons */}
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { label: 'Ruhe', bpm: 60, color: 'hover:border-blue-500' },
-              { label: 'Normal', bpm: 75, color: 'hover:border-emerald-500' },
-              { label: 'Cardio', bpm: 130, color: 'hover:border-amber-500' },
-              { label: 'Peak', bpm: 175, color: 'hover:border-rose-500' },
-            ].map((preset) => (
-              <button
-                key={preset.label}
-                id={`btn-preset-${preset.bpm}`}
-                type="button"
-                onClick={() =>
-                  onUpdateHrState({ bpm: preset.bpm, provider: 'manual', deviceLabel: `Preset: ${preset.label}` })
-                }
-                className={`py-1.5 px-2 bg-slate-950 border border-slate-800 ${preset.color} text-slate-200 text-xs rounded-lg transition-colors text-center cursor-pointer`}
-              >
-                <div className="font-medium">{preset.label}</div>
-                <div className="text-[10px] text-slate-400">{preset.bpm} BPM</div>
-              </button>
-            ))}
-          </div>
+          <input
+            id="slider-bpm-test"
+            type="range"
+            min="40"
+            max="200"
+            value={hrState.bpm || 70}
+            onChange={handleSliderChange}
+            className="w-full accent-rose-500 cursor-pointer"
+          />
         </div>
       )}
     </div>

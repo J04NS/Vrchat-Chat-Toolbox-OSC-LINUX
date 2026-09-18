@@ -1,26 +1,32 @@
 import React, { useState } from 'react';
-import { Network, Send, CheckCircle2, XCircle, Trash2, Shield, Activity, RefreshCw } from 'lucide-react';
-import { OscLogEntry } from '../types';
+import { Network, Send, CheckCircle2, XCircle, Trash2, Shield, Activity, RefreshCw, Download } from 'lucide-react';
+import { ChatboxConfig, OscLogEntry, AppLanguage } from '../types';
+import { translations } from '../lib/i18n';
 
 interface OscNetworkCardProps {
+  lang?: AppLanguage;
   oscHost: string;
   oscPort: number;
   packetsSent: number;
   logs: OscLogEntry[];
+  config?: ChatboxConfig;
   onUpdateTarget: (host: string, port: number) => void;
   onSendTest: () => Promise<void>;
   onClearLogs: () => Promise<void>;
 }
 
 export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
+  lang = 'en',
   oscHost,
   oscPort,
   packetsSent,
   logs,
+  config,
   onUpdateTarget,
   onSendTest,
   onClearLogs,
 }) => {
+  const t = translations[lang];
   const [hostInput, setHostInput] = useState(oscHost);
   const [portInput, setPortInput] = useState(String(oscPort));
   const [isSending, setIsSending] = useState(false);
@@ -36,6 +42,25 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
     setTimeout(() => setIsSending(false), 400);
   };
 
+  const handleDownloadConfig = () => {
+    // CRITICAL USER REQUIREMENT:
+    // Die HypeRate Session-ID soll beim Runterladen nicht ausgefüllt sein (leerer String).
+    const exportConfig = {
+      ...(config || {}),
+      hyperateSessionId: '', // Always empty on download!
+    };
+    const jsonStr = JSON.stringify(exportConfig, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'chatbox-config.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl backdrop-blur-md">
       {/* Header */}
@@ -46,9 +71,9 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
           </div>
           <div>
             <h2 className="text-sm font-semibold tracking-wide text-slate-100 flex items-center gap-2">
-              VRChat OSC Netzwerk (UDP 9000)
+              {t.oscNetwork.title}
             </h2>
-            <p className="text-xs text-slate-400">Verbindung zu VRChat auf Linux oder lokalem PC</p>
+            <p className="text-xs text-slate-400">{t.oscNetwork.subtitle}</p>
           </div>
         </div>
 
@@ -57,7 +82,7 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
           <Activity className="w-4 h-4 text-teal-400" />
           <div className="text-right leading-none">
             <span className="text-sm font-bold font-mono text-white">{packetsSent}</span>
-            <span className="text-[10px] text-slate-400 ml-1">Pakete</span>
+            <span className="text-[10px] text-slate-400 ml-1">{t.oscNetwork.packetsSent}</span>
           </div>
         </div>
       </div>
@@ -65,19 +90,19 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
       {/* Target configuration */}
       <form onSubmit={handleSave} className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-300 mb-1">VRChat OSC Ziel IP / Host</label>
+          <label className="block text-xs font-medium text-slate-300 mb-1">{t.oscNetwork.targetAddress}</label>
           <input
             id="input-osc-host"
             type="text"
             value={hostInput}
             onChange={(e) => setHostInput(e.target.value)}
-            placeholder="127.0.0.1 (Standard)"
+            placeholder="127.0.0.1 (Default)"
             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-teal-500"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-300 mb-1">Port (Standard 9000)</label>
+          <label className="block text-xs font-medium text-slate-300 mb-1">{t.oscNetwork.port} (Default 9000)</label>
           <div className="flex gap-2">
             <input
               id="input-osc-port"
@@ -92,7 +117,7 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
               type="submit"
               className="px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white text-xs font-medium rounded-xl transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
             >
-              Speichern
+              {t.common.save}
             </button>
           </div>
         </div>
@@ -100,7 +125,7 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
 
       {/* Actions */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-slate-300">Live OSC Protokoll (Letzte Pakete)</span>
+        <span className="text-xs font-medium text-slate-300">{t.oscNetwork.logsTitle}</span>
         <div className="flex items-center gap-2">
           <button
             id="btn-send-test-osc"
@@ -110,14 +135,14 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors cursor-pointer"
           >
             {isSending ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-            Test-Paket
+            {t.oscNetwork.sendTestBtn}
           </button>
           <button
             id="btn-clear-logs"
             type="button"
             onClick={onClearLogs}
             className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition-colors cursor-pointer"
-            title="Log leeren"
+            title={t.oscNetwork.clearLogsBtn}
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -128,7 +153,7 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
       <div className="max-h-48 overflow-y-auto rounded-xl bg-slate-950 border border-slate-800 p-2 font-mono text-[11px] space-y-1.5">
         {logs.length === 0 ? (
           <div className="py-6 text-center text-slate-500 italic">
-            Noch keine Pakete gesendet. Klicke auf "Test-Paket" oder starte die Übertragung.
+            {t.oscNetwork.noLogsYet}
           </div>
         ) : (
           logs.map((log) => (
@@ -152,6 +177,23 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
             </div>
           ))
         )}
+      </div>
+
+      {/* Export / Download Configuration without session ID */}
+      <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <div className="flex items-center gap-1.5">
+          <Shield className="w-3.5 h-3.5 text-emerald-400" />
+          <span>{lang === 'de' ? 'HypeRate Session-ID bleibt beim Exportieren unberührt & leer' : 'HypeRate Session ID is always kept empty and protected upon export'}</span>
+        </div>
+        <button
+          id="btn-download-config-json"
+          type="button"
+          onClick={handleDownloadConfig}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors cursor-pointer border border-slate-700"
+        >
+          <Download className="w-3.5 h-3.5 text-teal-400" />
+          {lang === 'de' ? 'Konfiguration herunterladen' : 'Export Configuration'}
+        </button>
       </div>
     </div>
   );

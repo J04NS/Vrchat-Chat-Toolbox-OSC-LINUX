@@ -73,3 +73,128 @@ export function encodeVRChatChatboxTyping(typing: boolean): Uint8Array {
   packet.set(typeTagBytes, addrBytes.length);
   return packet;
 }
+
+export interface DecodedOscPacket {
+  address: string;
+  args: any[];
+}
+
+/**
+ * Decodes incoming OSC buffers, supporting both single messages and OSC bundles (#bundle).
+ * VRChat groups avatar parameter updates into #bundle packets on UDP 9001.
+ */
+export function decodeOscPackets(buf: Uint8Array | Buffer): DecodedOscPacket[] {
+  const results: DecodedOscPacket[] = [];
+  if (!buf || buf.length < 4) return results;
+
+  try {
+    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+
+    // Check if packet is an OSC Bundle: starts with "#bundle\0" (8 bytes)
+    if (buf.length >= 16) {
+      let isBundle = true;
+      const bundleHeader = [35, 98, 117, 110, 100, 108, 101, 0]; // "#bundle\0"
+      for (let i = 0; i < 8; i++) {
+        if (buf[i] !== bundleHeader[i]) {
+          isBundle = false;
+          break;
+        }
+      }
+
+      if (isBundle) {
+        // Offset 16: after 8 bytes bundle tag + 8 bytes timetag
+        let offset = 16;
+        while (offset + 4 <= buf.length) {
+          const elemSize = view.getInt32(offset, false);
+          offset += 4;
+          if (elemSize <= 0 || offset + elemSize > buf.length) break;
+          const subBuf = buf.subarray(offset, offset + elemSize);
+          const subPackets = decodeOscPackets(subBuf);
+          results.push(...subPackets);
+          offset += elemSize;
+        }
+        return results;
+      }
+    }
+
+    // Single OSC Message decoding
+    let offset = 0;
+    let nullIdx = -1;
+    for (let i = offset; i < buf.length; i++) {
+      if (buf[i] === 0) {
+        nullIdx = i;
+        break;
+      }
+    }
+    if (nullIdx === -1) return results;
+    const address = new TextDecoder().decode(buf.subarray(offset, nullIdx));
+    offset = nullIdx + 1;
+    while (offset % 4 !== 0 && offset < buf.length) offset++;
+
+    if (offset >= buf.length || buf[offset] !== 44 /* ',' */) {
+      results.push({ address, args: [] });
+      return results;
+    }
+
+    // Read type tags
+    let typeTagNull = -1;
+    for (let i = offset; i < buf.length; i++) {
+      if (buf[i] === 0) {
+        typeTagNull = i;
+        break;
+      }
+    }
+    if (typeTagNull === -1) {
+      results.push({ address, args: [] });
+      return results;
+    }
+    const typeTags = new TextDecoder().decode(buf.subarray(offset + 1, typeTagNull));
+    offset = typeTagNull + 1;
+    while (offset % 4 !== 0 && offset < buf.length) offset++;
+
+    const args: any[] = [];
+    for (const tag of typeTags) {
+      if (tag === 'T') {
+        args.push(true);
+      } else if (tag === 'F') {
+        args.push(false);
+      } else if (tag === 'i') {
+        if (offset + 4 <= buf.length) {
+          args.push(view.getInt32(offset, false));
+          offset += 4;
+        }
+      } else if (tag === 'f') {
+        if (offset + 4 <= buf.length) {
+          args.push(view.getFloat32(offset, false));
+          offset += 4;
+        }
+      } else if (tag === 's') {
+        let strNull = -1;
+        for (let i = offset; i < buf.length; i++) {
+          if (buf[i] === 0) {
+            strNull = i;
+            break;
+          }
+        }
+        if (strNull !== -1) {
+          args.push(new TextDecoder().decode(buf.subarray(offset, strNull)));
+          offset = strNull + 1;
+          while (offset % 4 !== 0 && offset < buf.length) offset++;
+        }
+      }
+    }
+
+    results.push({ address, args });
+    return results;
+  } catch {
+    return results;
+  }
+}
+
+/**
+ * Decodes an incoming OSC message, returning the first message or null.
+ */
+export function decodeOscMessage(buf: Uint8Array | Buffer): DecodedOscPacket | null {
+  const packets = decodeOscPackets(buf);
+  return packets.length > 0 ? packets[0] : null;
+}
