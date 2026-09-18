@@ -1,5 +1,3 @@
-## Made With help of AI
-
 - **Live Heart Rate Tracking:** HypeRate & Pulsoid integration featuring BPM target zones and dynamic heartbeat pulse animations.
 - **100% Zero-Secret Relay Mode:** HypeRate API keys are never exposed to browser clients or public repositories. Heart rate telemetry is safely streamed through an internal or private Pelikan/Pterodactyl relay.
 - **Native Linux Media Detection:** Reads native Playerctl / MPRIS metadata (Spotify, VLC, web browsers) on Linux and transmits track title, artist, and playback status to VRChat.
@@ -10,6 +8,9 @@
 - **Bilingual Interface:** Toggle between **English** and **German (Deutsch)** in the web UI anytime with persistent memory.
 
 ---
+## Disclamer
+- Its a Beta made with help of AI, if you have any Ideas contact me
+  
 
 ## 🚀 Quickstart & Installation
 
