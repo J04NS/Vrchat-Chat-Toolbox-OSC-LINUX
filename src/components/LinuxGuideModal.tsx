@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { Terminal, Copy, Check, X, Server, ShieldCheck, Gamepad2, Radio } from 'lucide-react';
+import { AppLanguage } from '../types';
 
 interface LinuxGuideModalProps {
   isOpen: boolean;
   onClose: () => void;
   serverPort: number;
+  lang?: AppLanguage;
 }
 
 export const LinuxGuideModal: React.FC<LinuxGuideModalProps> = ({
   isOpen,
   onClose,
   serverPort,
+  lang = 'en',
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -22,16 +25,18 @@ export const LinuxGuideModal: React.FC<LinuxGuideModalProps> = ({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const startScriptCmd = `# 1. Starte die App auf Linux (Port 9090)
+  const isDe = lang === 'de';
+
+  const startScriptCmd = `# 1. Start on Linux (Port 9090)
 chmod +x start-linux.sh
 ./start-linux.sh`;
 
-  const manualInstallCmd = `# Manueller Befehl bei npm Versionskonflikten:
+  const manualInstallCmd = `# Manual build and run:
 npm install --legacy-peer-deps
 npm run build
 PORT=9090 node dist/server.cjs`;
 
-  const nodeDirectCmd = `# Alternativer direkter Start mit Node.js (nach Build):
+  const nodeDirectCmd = `# Direct run with Node.js (after build):
 PORT=9090 node dist/server.cjs`;
 
   const systemdFile = `[Unit]
@@ -50,9 +55,9 @@ Restart=on-failure
 [Install]
 WantedBy=default.target`;
 
-  const systemdInstallCmd = `# Systemd User Service aktivieren (startet automatisch mit Linux)
+  const systemdInstallCmd = `# Enable systemd user service (auto-starts with Linux)
 mkdir -p ~/.config/systemd/user
-# Datei speichern unter ~/.config/systemd/user/vrcosc.service
+# Save as ~/.config/systemd/user/vrcosc.service
 systemctl --user daemon-reload
 systemctl --user enable --now vrcosc.service`;
 
@@ -74,8 +79,12 @@ systemctl --user enable --now vrcosc.service`;
             <Terminal className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">Linux & Port 9090 Anleitung</h2>
-            <p className="text-xs text-slate-400">VRChat Chatbox unter Linux einrichten und betreiben</p>
+            <h2 className="text-lg font-bold text-white">
+              {isDe ? 'Linux & Port 9090 Anleitung' : 'Linux & Port 9090 Guide'}
+            </h2>
+            <p className="text-xs text-slate-400">
+              {isDe ? 'VRChat Chatbox unter Linux einrichten und betreiben' : 'Setup and run VRChat Chatbox under Linux'}
+            </p>
           </div>
         </div>
 
@@ -83,10 +92,12 @@ systemctl --user enable --now vrcosc.service`;
           {/* Section 1: Launch */}
           <div className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
-              <Server className="w-4 h-4" /> 1. Start auf Linux (Port 9090)
+              <Server className="w-4 h-4" /> {isDe ? '1. Start auf Linux (Port 9090)' : '1. Run on Linux (Port 9090)'}
             </h3>
             <p className="text-xs text-slate-300">
-              Wenn du die Anwendung auf deinem Linux-System (Ubuntu, Arch, Fedora, SteamOS) herunterlädst oder exportierst, startet das beiliegende Skript den Server direkt auf <strong>http://localhost:9090</strong>:
+              {isDe
+                ? 'Wenn du die Anwendung auf deinem Linux-System (Ubuntu, Arch, Fedora, SteamOS) herunterlädst oder exportierst, startet das beiliegende Skript den Server direkt auf http://localhost:9090:'
+                : 'When downloading or exporting this app to your Linux system (Ubuntu, Arch, Fedora, SteamOS), the included script launches the server on http://localhost:9090:'}
             </p>
             <div className="relative p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-emerald-400">
               <pre className="whitespace-pre-wrap">{startScriptCmd}</pre>
@@ -120,38 +131,40 @@ systemctl --user enable --now vrcosc.service`;
           {/* Section 2: VRChat OSC activation */}
           <div className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
-              <Gamepad2 className="w-4 h-4" /> 2. OSC in VRChat (Steam / Proton) aktivieren
+              <Gamepad2 className="w-4 h-4" /> {isDe ? '2. OSC in VRChat (Steam / Proton) aktivieren' : '2. Enable OSC in VRChat (Steam / Proton)'}
             </h3>
             <p className="text-xs text-slate-300">
-              Damit VRChat die Chatbox-Nachrichten empfängt, muss OSC im Spiel aktiviert sein:
+              {isDe
+                ? 'Damit VRChat die Chatbox-Nachrichten empfängt, muss OSC im Spiel aktiviert sein:'
+                : 'For VRChat to receive Chatbox OSC messages, OSC must be turned on in-game:'}
             </p>
             <ol className="list-decimal list-inside text-xs text-slate-300 space-y-1 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-              <li>Drücke in VRChat auf der Tastatur <strong>R</strong> oder öffne das Quick Menu (Action Wheel).</li>
-              <li>Gehe auf <strong>Options</strong> &rarr; <strong>OSC</strong>.</li>
-              <li>Stelle sicher, dass <strong>OSC Enabled</strong> eingeschaltet ist.</li>
-              <li>VRChat lauscht standardmäßig auf <code>127.0.0.1:9000</code> UDP.</li>
+              <li>{isDe ? 'Drücke in VRChat auf der Tastatur R oder öffne das Quick Menu (Action Wheel).' : 'In VRChat, press R on your keyboard or open the Quick Menu / Action Wheel.'}</li>
+              <li>{isDe ? 'Gehe auf Options ➔ OSC.' : 'Navigate to Options ➔ OSC.'}</li>
+              <li>{isDe ? 'Stelle sicher, dass OSC Enabled eingeschaltet ist.' : 'Ensure OSC Enabled is toggled ON.'}</li>
+              <li>{isDe ? 'VRChat lauscht standardmäßig auf 127.0.0.1:9000 UDP.' : 'VRChat listens on 127.0.0.1:9000 UDP by default.'}</li>
             </ol>
           </div>
 
           {/* Section 3: Security of HypeRate Key */}
           <div className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4" /> 3. Schutz deines HypeRate API-Keys
+              <ShieldCheck className="w-4 h-4" /> {isDe ? '3. Schutz deines HypeRate API-Keys' : '3. Security of your HypeRate API Key'}
             </h3>
             <p className="text-xs text-slate-300">
-              Dein hinterlegter HypeRate-Schlüssel ist server-seitig geschützt:
+              {isDe ? 'Dein hinterlegter HypeRate-Schlüssel ist server-seitig geschützt:' : 'Your HypeRate API key is strictly server-side protected:'}
             </p>
             <ul className="list-disc list-inside text-xs text-slate-400 space-y-1 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-              <li>Der Schlüssel wird niemals unverschlüsselt an den Browser gesendet.</li>
-              <li>In der Oberfläche wird lediglich ein maskierter Status (z.B. <code>••••••••3J91</code>) angezeigt.</li>
-              <li>Die WebSocket-Verbindung zu <code>app.hyperate.io</code> wird direkt vom lokalen Backend-Dienst aufgebaut.</li>
+              <li>{isDe ? 'Der Schlüssel wird niemals im Klartext an den Browser gesendet.' : 'The key is never sent unencrypted to the browser.'}</li>
+              <li>{isDe ? 'Im Web UI wird der Schlüssel maskiert dargestellt oder über das integrierte Pelikan Relay geroutet.' : 'In the Web UI, the key is masked or routed through the integrated Pelikan Relay.'}</li>
+              <li>{isDe ? 'Die WebSocket-Verbindung zu app.hyperate.io wird direkt vom lokalen Backend aufgebaut.' : 'The WebSocket connection to app.hyperate.io is established directly by the local backend service.'}</li>
             </ul>
           </div>
 
           {/* Section 4: Systemd Service */}
           <div className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
-              <Radio className="w-4 h-4" /> 4. Optional: Systemd Autostart-Dienst
+              <Radio className="w-4 h-4" /> {isDe ? '4. Optional: Systemd Autostart-Dienst' : '4. Optional: Systemd Autostart Service'}
             </h3>
             <div className="relative p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] text-slate-300">
               <pre className="whitespace-pre-wrap">{systemdFile}</pre>
@@ -172,6 +185,34 @@ systemctl --user enable --now vrcosc.service`;
               </button>
             </div>
           </div>
+
+          {/* Section 5: Pelikan / Pterodactyl Egg */}
+          <div className="space-y-2 pt-1 border-t border-slate-800/80">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
+              <Server className="w-4 h-4" /> {isDe ? '5. Pelikan / Pterodactyl Egg' : '5. Pelikan / Pterodactyl Egg'}
+            </h3>
+            <p className="text-xs text-slate-300">
+              {isDe
+                ? 'Fertiges Egg für dein Pelikan Web-Panel. Importiere die JSON-Datei direkt unter Admin ➔ Nests ➔ Import Egg.'
+                : 'Ready-made Egg for your Pelikan / Pterodactyl web panel. Import the JSON under Admin ➔ Nests ➔ Import Egg.'}
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <a
+                href="/egg-hyperate-relay.json"
+                download="egg-hyperate-relay.json"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 text-xs font-semibold border border-teal-500/40 transition-all cursor-pointer"
+              >
+                <span>📥 egg-hyperate-relay.json</span>
+              </a>
+              <a
+                href="/pelikan-relay.tar.gz"
+                download="pelikan-relay.tar.gz"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all cursor-pointer"
+              >
+                <span>📦 pelikan-relay.tar.gz</span>
+              </a>
+            </div>
+          </div>
         </div>
 
         <div className="mt-6 pt-4 border-t border-slate-800 flex justify-end">
@@ -179,7 +220,7 @@ systemctl --user enable --now vrcosc.service`;
             onClick={onClose}
             className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer"
           >
-            Verstanden
+            {isDe ? 'Verstanden' : 'Got it'}
           </button>
         </div>
       </div>

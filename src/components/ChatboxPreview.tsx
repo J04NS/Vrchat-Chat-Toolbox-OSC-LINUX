@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Radio, Volume2, VolumeX, Send, Sparkles, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
+import { Radio, Volume2, VolumeX, Send, Sparkles, AlertTriangle, Clock, RefreshCw, Moon } from 'lucide-react';
 import { formatChatboxMessage, getHeartIcon } from '../lib/formatter';
-import { HeartRateState, MediaState } from '../types';
+import { AfkState, HardwareStats, HeartRateState, MediaState, AppLanguage } from '../types';
+import { translations } from '../lib/i18n';
 
 interface ChatboxPreviewProps {
+  lang?: AppLanguage;
   template: string;
   hrState: HeartRateState;
   mediaState: MediaState;
@@ -14,10 +16,20 @@ interface ChatboxPreviewProps {
   bypassTyping: boolean;
   updateIntervalMs: number;
   isActive: boolean;
+  hardwareStats?: HardwareStats;
+  afkState?: AfkState;
+  afkTemplate?: string;
+  afkOverrideChatbox?: boolean;
+  customTexts?: string[];
+  currentCustomTextIndex?: number;
+  mediaOnlyWhenPlaying?: boolean;
+  isAutomated?: boolean;
+  activeProfileName?: string;
   onSendManual: (text: string) => Promise<void>;
 }
 
 export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
+  lang = 'en',
   template,
   hrState,
   mediaState,
@@ -28,8 +40,18 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
   bypassTyping,
   updateIntervalMs,
   isActive,
+  hardwareStats,
+  afkState,
+  afkTemplate,
+  afkOverrideChatbox,
+  customTexts,
+  currentCustomTextIndex,
+  mediaOnlyWhenPlaying,
+  isAutomated,
+  activeProfileName,
   onSendManual,
 }) => {
+  const t = translations[lang];
   const [tick, setTick] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [pulseScale, setPulseScale] = useState(1);
@@ -54,15 +76,22 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
     }
   }, [hrState.bpm]);
 
-  const { fullText, displayText, isOverflow } = formatChatboxMessage(
+  const { fullText, displayText, isOverflow } = formatChatboxMessage({
     template,
     hrState,
     mediaState,
     customStatus,
     tick,
     marqueeEnabled,
-    marqueeWidth
-  );
+    marqueeWidth,
+    mediaOnlyWhenPlaying: mediaOnlyWhenPlaying !== false,
+    hardwareStats,
+    afkState,
+    afkTemplate,
+    afkOverrideChatbox,
+    customTexts,
+    currentCustomTextIndex,
+  });
 
   const handleTestSend = async () => {
     setIsSending(true);
@@ -80,19 +109,30 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
           </div>
           <div>
             <h2 className="text-sm font-semibold tracking-wide text-slate-100 flex items-center gap-2">
-              VRChat Chatbox Live-Vorschau
+              {t.preview.title}
               {isActive ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  Aktiv am Senden
+                  {t.preview.liveSending}
                 </span>
               ) : (
                 <span className="text-[11px] font-medium bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">
-                  Pausiert
+                  {t.preview.paused}
+                </span>
+              )}
+              {afkState?.isAfk && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full">
+                  <Moon className="w-3 h-3" /> {t.preview.afkMode}
+                </span>
+              )}
+              {isAutomated && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full animate-in fade-in">
+                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span>{lang === 'de' ? 'Auto-Profil' : 'Auto-Profile'}{activeProfileName ? `: ${activeProfileName}` : ''}</span>
                 </span>
               )}
             </h2>
-            <p className="text-xs text-slate-400">So wird dein Text in VRChat über deinem Avatar angezeigt</p>
+            <p className="text-xs text-slate-400">{t.preview.subtitle}</p>
           </div>
         </div>
 
@@ -102,21 +142,26 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
             onClick={handleTestSend}
             disabled={isSending}
             className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white rounded-lg transition-all shadow-md active:scale-95 cursor-pointer"
-            title="Diesen Text sofort als OSC-Paket an VRChat senden"
+            title={t.preview.sendNow}
           >
             {isSending ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-            Jetzt senden
+            {t.preview.sendNow}
           </button>
         </div>
       </div>
 
       {/* Simulated VRChat In-VR Chatbox Bubble */}
-      <div className="relative my-2 p-6 rounded-2xl bg-gradient-to-b from-slate-950/80 via-slate-900/90 to-slate-950/90 border-2 border-slate-700/80 shadow-2xl overflow-hidden">
+      <div className="relative my-2 p-6 rounded-2xl transition-all duration-300 overflow-hidden bg-gradient-to-b from-slate-950/80 via-slate-900/90 to-slate-950/90 border-2 border-slate-700/80 shadow-2xl">
         {/* VR Chatbox decorative top notch / indicator */}
         <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pb-2 mb-2 border-b border-slate-800/80">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-            <span className="text-slate-300 font-medium">CHATBOX</span>
+            <span className="text-slate-300 font-medium">{t.preview.chatboxBadge}</span>
+            {afkState?.isAfk && (
+              <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-sans border border-amber-500/30 flex items-center gap-1">
+                <Moon className="w-2.5 h-2.5" /> 💤 {t.preview.afkMode}
+              </span>
+            )}
             <span className="text-slate-500">|</span>
             <span className="text-slate-400 flex items-center gap-1">
               <Clock className="w-3 h-3" /> {new Date().toLocaleTimeString()}
@@ -126,23 +171,23 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
           <div className="flex items-center gap-3">
             {playSound ? (
               <span className="flex items-center gap-1 text-amber-400 text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
-                <Volume2 className="w-3 h-3" /> Sound an
+                <Volume2 className="w-3 h-3" /> {t.preview.soundOn}
               </span>
             ) : (
               <span className="flex items-center gap-1 text-slate-500 text-[10px]">
-                <VolumeX className="w-3 h-3" /> Stumm
+                <VolumeX className="w-3 h-3" /> {t.preview.soundOff}
               </span>
             )}
             <span className="text-slate-400 text-[10px]">
-              {bypassTyping ? '⚡ Direkt' : '⌨️ Tippend'}
+              {bypassTyping ? `⚡ ${t.preview.directSendOn}` : '⌨️ Typing'}
             </span>
           </div>
         </div>
 
         {/* Text Display Bubble */}
-        <div className="min-h-[58px] flex items-center justify-center text-center px-4 py-3 rounded-xl bg-black/40 border border-slate-800/60">
+        <div className="min-h-[58px] flex items-center justify-center text-center px-4 py-3 rounded-xl transition-all bg-black/40 border border-slate-800/60">
           <span className="text-lg md:text-xl font-medium tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] break-words font-sans">
-            {displayText || <span className="text-slate-500 italic">Chatbox Text ist leer...</span>}
+            {displayText || <span className="text-slate-500 italic">{lang === 'de' ? 'Chatbox-Text ist leer...' : 'Chatbox text is empty...'}</span>}
           </span>
         </div>
 
@@ -164,9 +209,20 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
             <div className="flex items-center gap-1.5 truncate max-w-[200px]">
               <span>{mediaState.isPlaying ? '🎵' : '⏸️'}</span>
               <span className="truncate text-slate-300">
-                {mediaState.title ? `${mediaState.title} - ${mediaState.artist || 'Unbekannt'}` : 'Keine Musik'}
+                {mediaState.title ? `${mediaState.title} - ${mediaState.artist || (lang === 'de' ? 'Unbekannt' : 'Unknown')}` : (lang === 'de' ? 'Keine Musik' : 'No Music')}
               </span>
             </div>
+
+            {hardwareStats && (
+              <>
+                <span className="text-slate-600">•</span>
+                <div className="flex items-center gap-2 text-slate-300 text-[11px] font-mono">
+                  <span>CPU: {hardwareStats.cpuPercent}%</span>
+                  <span>RAM: {hardwareStats.ramPercent}%</span>
+                  {hardwareStats.gpuPercent !== undefined && <span>GPU: {hardwareStats.gpuPercent}%</span>}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -179,7 +235,7 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
                   : 'bg-slate-800 text-slate-400'
               }`}
             >
-              {displayText.length} / 144 Zeichen
+              {displayText.length} / 144 {t.preview.charsCount}
             </span>
           </div>
         </div>
@@ -188,7 +244,7 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
           <div className="mt-2 text-xs flex items-center gap-1.5 text-rose-400 bg-rose-950/40 p-2 rounded-lg border border-rose-800/40">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>
-              Der Text überschreitet das VRChat-Limit (144 Zeichen) und wird im Chat abgeschnitten. Aktiviere Marquee-Laufschrift oder kürze den Text.
+              {t.preview.overflowWarning}
             </span>
           </div>
         )}
@@ -198,9 +254,9 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
       <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 px-1">
         <span className="flex items-center gap-1">
           <Sparkles className="w-3 h-3 text-blue-400" />
-          Aktualisierungsintervall: <span className="text-slate-200 font-mono">{updateIntervalMs / 1000}s</span>
+          {t.preview.updateInterval}: <span className="text-slate-200 font-mono">{updateIntervalMs / 1000}s</span>
         </span>
-        <span>{marqueeEnabled ? '↔️ Laufschrift aktiv' : '⏹️ Statischer Text'}</span>
+        <span>{marqueeEnabled ? t.preview.marqueeActive : t.preview.staticText}</span>
       </div>
     </div>
   );

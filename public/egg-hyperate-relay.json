@@ -1,0 +1,74 @@
+{
+  "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+  "meta": {
+    "version": "PTDL_v2",
+    "update_url": null
+  },
+  "exported_at": "2026-09-18T14:45:00+00:00",
+  "name": "HypeRate OSC Relay",
+  "author": "support@vrchat-osc-hub.local",
+  "description": "Sicherer HypeRate WebSocket Relay- und Proxy-Server für VRChat OSC Hub. Schützt den HypeRate API-Key vor Clients, GitHub und Mitspielern.",
+  "features": null,
+  "docker_images": {
+    "Node.js 20": "ghcr.io/parkervcp/yolks:nodejs_20",
+    "Node.js 22": "ghcr.io/parkervcp/yolks:nodejs_22",
+    "Node.js 18": "ghcr.io/parkervcp/yolks:nodejs_18"
+  },
+  "file_denylist": [],
+  "startup": "if [ -f package.json ]; then npm install --production; fi && node server.js",
+  "config": {
+    "files": "{}",
+    "startup": "{\r\n    \"done\": \"[Pelikan Relay] Bereit auf Port\"\r\n}",
+    "logs": "{}",
+    "stop": "^C"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/bash\n# Pterodactyl / Pelikan Egg Installation Script\n\napt-get update\napt-get install -y git curl jq\n\nmkdir -p /mnt/server\ncd /mnt/server\n\necho \"Initialisiere HypeRate Relay Server...\"\n\n# Falls Git Repo angegeben wurde, klonen, ansonsten Default-Dateien erzeugen\nif [ ! -z \"${GIT_ADDRESS}\" ]; then\n    if [ -d \".git\" ]; then\n        git pull\n    else\n        git clone ${GIT_ADDRESS} .\n    fi\nfi\n\n# Falls server.js noch nicht existiert, Basisdateien anlegen\nif [ ! -f \"package.json\" ]; then\n    cat << 'EOF' > package.json\n{\n  \"name\": \"hyperate-pelikan-relay\",\n  \"version\": \"1.0.0\",\n  \"main\": \"server.js\",\n  \"scripts\": {\n    \"start\": \"node server.js\"\n  },\n  \"dependencies\": {\n    \"ws\": \"^8.18.0\",\n    \"dotenv\": \"^16.4.7\"\n  }\n}\nEOF\nfi\n\n# Install NPM dependencies\nnpm install --production\n\necho \"Installation abgeschlossen!\"",
+      "container": "ghcr.io/parkervcp/installers:debian",
+      "entrypoint": "bash"
+    }
+  },
+  "variables": [
+    {
+      "name": "HypeRate API Key",
+      "description": "Dein geheimer HypeRate API Key. Dieser Key bleibt sicher auf deinem Pelikan-Server und wird niemals an Clients oder ins Internet gesendet.",
+      "env_variable": "HYPERATE_API_KEY",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|min:10",
+      "field_type": "text"
+    },
+    {
+      "name": "Server Port",
+      "description": "Der Port, auf dem der WebSocket- und Healthcheck-Server lauscht.",
+      "env_variable": "PORT",
+      "default_value": "8080",
+      "user_viewable": true,
+      "user_editable": false,
+      "rules": "required|numeric",
+      "field_type": "text"
+    },
+    {
+      "name": "Relay Secret (Optional)",
+      "description": "Optionales Passwort. Wenn ausgefüllt, können sich nur Clients verbinden, die dieses Passwort kennen. Leer lassen für offenen Zugriff mit Session-ID.",
+      "env_variable": "RELAY_SECRET",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string|max:64",
+      "field_type": "text"
+    },
+    {
+      "name": "Git Repository (Optional)",
+      "description": "Optionales Git Repository zum automatischen Laden von Updates.",
+      "env_variable": "GIT_ADDRESS",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string",
+      "field_type": "text"
+    }
+  ]
+}

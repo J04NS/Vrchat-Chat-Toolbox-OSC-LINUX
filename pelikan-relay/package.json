@@ -1,0 +1,13 @@
+{
+  "name": "hyperate-pelikan-relay",
+  "version": "1.0.0",
+  "description": "Sicherer HypeRate Relay & Proxy Server für Pelikan / Pterodactyl",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "dotenv": "^16.4.7"
+  }
+}
