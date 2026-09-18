@@ -1,4 +1,4 @@
-#Made With help of AI
+## Made With help of AI
 
 - **Live Heart Rate Tracking:** HypeRate & Pulsoid integration featuring BPM target zones and dynamic heartbeat pulse animations.
 - **100% Zero-Secret Relay Mode:** HypeRate API keys are never exposed to browser clients or public repositories. Heart rate telemetry is safely streamed through an internal or private Pelikan/Pterodactyl relay.
