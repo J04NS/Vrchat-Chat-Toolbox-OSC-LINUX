@@ -1,12 +1,4 @@
-# 🥽 VRChat OSC Chatbox Hub
-
-A lightweight, resource-efficient, and secure OSC Chatbox Manager for **VRChat**, designed specifically for **Linux (Steam Deck / Desktop)** and cross-platform environments.
-
-Features live heart rate streaming (HypeRate & Pulsoid), media player detection (Spotify, YouTube, VLC via Playerctl/MPRIS & web), rotating custom text messages, hardware telemetry (CPU, GPU, RAM, temps), and automated AFK status detection.
-
----
-
-## 🌟 Features
+#Made With help of AI
 
 - **Live Heart Rate Tracking:** HypeRate & Pulsoid integration featuring BPM target zones and dynamic heartbeat pulse animations.
 - **100% Zero-Secret Relay Mode:** HypeRate API keys are never exposed to browser clients or public repositories. Heart rate telemetry is safely streamed through an internal or private Pelikan/Pterodactyl relay.
