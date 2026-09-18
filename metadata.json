@@ -1,0 +1,6 @@
+{
+  "name": "VRChat OSC Chatbox Hub",
+  "description": "VRChat Chatbox OSC-Manager für Linux & Web mit HypeRate Puls, Pulsoid, Musikquellen und anpassbarem Web-Interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
