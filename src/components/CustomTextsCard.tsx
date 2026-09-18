@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Plus, Trash2, Repeat, Sparkles, Check, ChevronRight } from 'lucide-react';
 import { AppLanguage } from '../types';
 import { translations } from '../lib/i18n';
@@ -23,29 +23,67 @@ export const CustomTextsCard: React.FC<CustomTextsCardProps> = ({
   onInsertMainVariable,
 }) => {
   const t = translations[lang];
-  const texts = customTexts && customTexts.length > 0
-    ? customTexts
-    : [lang === 'de' ? 'Willkommen in meiner VRChat Instanz! ✨' : 'Welcome to my VRChat instance! ✨'];
+  const fallback = [lang === 'de' ? 'Willkommen in meiner VRChat Instanz! ✨' : 'Welcome to my VRChat instance! ✨'];
+  const initialTexts = customTexts && customTexts.length > 0 ? customTexts : fallback;
+
+  const [localTexts, setLocalTexts] = useState<string[]>(initialTexts);
+  const isFocusedRef = useRef(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!isFocusedRef.current) {
+      setLocalTexts(customTexts && customTexts.length > 0 ? customTexts : fallback);
+    }
+  }, [customTexts]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleTextChange = (index: number, val: string) => {
-    const updated = [...texts];
+    const updated = [...localTexts];
     updated[index] = val;
-    onUpdateCustomTexts(updated);
+    setLocalTexts(updated);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      onUpdateCustomTexts(updated);
+    }, 450);
+  };
+
+  const handleTextBlur = () => {
+    isFocusedRef.current = false;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    onUpdateCustomTexts(localTexts);
   };
 
   const handleAddText = () => {
-    const nextNum = texts.length + 1;
-    const newTexts = [...texts, lang === 'de' ? `Mein Text ${nextNum}` : `My Text ${nextNum}`];
+    const nextNum = localTexts.length + 1;
+    const newTexts = [...localTexts, lang === 'de' ? `Mein Text ${nextNum}` : `My Text ${nextNum}`];
+    setLocalTexts(newTexts);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
     onUpdateCustomTexts(newTexts);
   };
 
   const handleRemoveText = (index: number) => {
-    if (texts.length <= 1) {
-      // Keep at least one empty
-      onUpdateCustomTexts(['']);
-      return;
+    let updated = localTexts.filter((_, i) => i !== index);
+    if (updated.length === 0) {
+      updated = [''];
     }
-    const updated = texts.filter((_, i) => i !== index);
+    setLocalTexts(updated);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
     onUpdateCustomTexts(updated);
   };
 
@@ -61,7 +99,7 @@ export const CustomTextsCard: React.FC<CustomTextsCardProps> = ({
             <h2 className="text-sm font-semibold tracking-wide text-slate-100 flex items-center gap-2">
               {t.customTexts.title}
               <span className="text-[10px] font-medium bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30">
-                {texts.length} {t.customTexts.activeCount}
+                {localTexts.length} {t.customTexts.activeCount}
               </span>
             </h2>
             <p className="text-xs text-slate-400">{t.customTexts.subtitle}</p>
@@ -115,8 +153,8 @@ export const CustomTextsCard: React.FC<CustomTextsCardProps> = ({
           </span>
         </div>
 
-        {texts.map((textVal, idx) => {
-          const isActive = idx === currentActiveIndex % texts.length;
+        {localTexts.map((textVal, idx) => {
+          const isActive = idx === currentActiveIndex % (localTexts.length || 1);
           const tagIndex = idx + 1;
           return (
             <div
@@ -150,6 +188,8 @@ export const CustomTextsCard: React.FC<CustomTextsCardProps> = ({
                 id={`input-custom-text-${idx}`}
                 type="text"
                 value={textVal}
+                onFocus={() => { isFocusedRef.current = true; }}
+                onBlur={handleTextBlur}
                 onChange={(e) => handleTextChange(idx, e.target.value)}
                 placeholder={lang === 'de' ? `Freitext ${tagIndex}...` : `Custom text ${tagIndex}...`}
                 className="flex-1 bg-transparent border-none text-xs text-white focus:outline-none px-2 py-1 placeholder:text-slate-600 font-sans"
@@ -196,7 +236,7 @@ export const CustomTextsCard: React.FC<CustomTextsCardProps> = ({
             <span className="text-[10px] text-indigo-200/70 font-sans">({lang === 'de' ? 'Rotiert automatisch alle Texte' : 'Automatically rotates all texts'})</span>
           </button>
 
-          {texts.map((_, i) => (
+          {localTexts.map((_, i) => (
             <button
               key={i}
               type="button"

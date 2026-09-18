@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Network, Send, CheckCircle2, XCircle, Trash2, Shield, Activity, RefreshCw, Download } from 'lucide-react';
+import { Network, Send, CheckCircle2, XCircle, Trash2, Shield, Activity, RefreshCw, Download, Upload, FileUp } from 'lucide-react';
 import { ChatboxConfig, OscLogEntry, AppLanguage } from '../types';
 import { translations } from '../lib/i18n';
 
@@ -13,6 +13,7 @@ interface OscNetworkCardProps {
   onUpdateTarget: (host: string, port: number) => void;
   onSendTest: () => Promise<void>;
   onClearLogs: () => Promise<void>;
+  onOpenMigrateModal?: () => void;
 }
 
 export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
@@ -25,6 +26,7 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
   onUpdateTarget,
   onSendTest,
   onClearLogs,
+  onOpenMigrateModal,
 }) => {
   const t = translations[lang];
   const [hostInput, setHostInput] = useState(oscHost);
@@ -179,21 +181,37 @@ export const OscNetworkCard: React.FC<OscNetworkCardProps> = ({
         )}
       </div>
 
-      {/* Export / Download Configuration without session ID */}
-      <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+      {/* Export & Import / Migration Area */}
+      <div className="mt-4 pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-400">
         <div className="flex items-center gap-1.5">
-          <Shield className="w-3.5 h-3.5 text-emerald-400" />
+          <Shield className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
           <span>{lang === 'de' ? 'HypeRate Session-ID bleibt beim Exportieren unberührt & leer' : 'HypeRate Session ID is always kept empty and protected upon export'}</span>
         </div>
-        <button
-          id="btn-download-config-json"
-          type="button"
-          onClick={handleDownloadConfig}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors cursor-pointer border border-slate-700"
-        >
-          <Download className="w-3.5 h-3.5 text-teal-400" />
-          {lang === 'de' ? 'Konfiguration herunterladen' : 'Export Configuration'}
-        </button>
+
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          {onOpenMigrateModal && (
+            <button
+              id="btn-open-migrate-modal"
+              type="button"
+              onClick={onOpenMigrateModal}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-950/40 hover:bg-teal-900/50 text-teal-300 text-xs font-semibold rounded-lg transition-colors cursor-pointer border border-teal-500/40 hover:border-teal-400"
+              title={lang === 'de' ? 'Frühere oder ältere config.json hochladen und in Schema v3 konvertieren' : 'Upload and migrate earlier config.json to modern v3'}
+            >
+              <Upload className="w-3.5 h-3.5 text-teal-400" />
+              {lang === 'de' ? 'Alte Config hochladen & konvertieren' : 'Upload & Migrate Config'}
+            </button>
+          )}
+
+          <button
+            id="btn-download-config-json"
+            type="button"
+            onClick={handleDownloadConfig}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors cursor-pointer border border-slate-700"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-400" />
+            {lang === 'de' ? 'Exportieren' : 'Export'}
+          </button>
+        </div>
       </div>
     </div>
   );

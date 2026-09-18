@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Moon, Clock, Radio, Footprints, ShieldCheck, Activity } from 'lucide-react';
 import { AfkState, AppLanguage } from '../types';
 import { translations } from '../lib/i18n';
@@ -34,6 +34,54 @@ export const AfkDetectionCard: React.FC<AfkDetectionCardProps> = ({
 }) => {
   const t = translations[lang];
   const [isTogglingManual, setIsTogglingManual] = useState(false);
+
+  // Local state for AFK template to avoid focus loss & continuous re-renders during typing
+  const [localTemplate, setLocalTemplate] = useState(template || '');
+  const isFocusedRef = useRef(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!isFocusedRef.current) {
+      setLocalTemplate(template || '');
+    }
+  }, [template]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleTemplateChange = (val: string) => {
+    setLocalTemplate(val);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      onUpdateConfig({ afkTemplate: val });
+    }, 450);
+  };
+
+  const handleTemplateBlur = () => {
+    isFocusedRef.current = false;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    if (localTemplate !== template) {
+      onUpdateConfig({ afkTemplate: localTemplate });
+    }
+  };
+
+  const handleInsertAfkVariable = (tag: string) => {
+    const updated = localTemplate.endsWith(' ') || localTemplate.length === 0 ? `${localTemplate}${tag}` : `${localTemplate} ${tag}`;
+    setLocalTemplate(updated);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    onUpdateConfig({ afkTemplate: updated });
+  };
 
   const isAfk = afkState?.isAfk ?? false;
   const afkDurationSec = afkState?.afkDurationSec ?? 0;
@@ -295,8 +343,10 @@ export const AfkDetectionCard: React.FC<AfkDetectionCardProps> = ({
         <input
           id="input-afk-template"
           type="text"
-          value={template}
-          onChange={(e) => onUpdateConfig({ afkTemplate: e.target.value })}
+          value={localTemplate}
+          onFocus={() => { isFocusedRef.current = true; }}
+          onBlur={handleTemplateBlur}
+          onChange={(e) => handleTemplateChange(e.target.value)}
           className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-amber-500 transition-colors"
           placeholder={t.afk.placeholderTemplate}
         />
@@ -307,7 +357,7 @@ export const AfkDetectionCard: React.FC<AfkDetectionCardProps> = ({
             <button
               key={v.tag}
               type="button"
-              onClick={() => onUpdateConfig({ afkTemplate: `${template} ${v.tag}`.trim() })}
+              onClick={() => handleInsertAfkVariable(v.tag)}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs font-mono text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
             >
               <span>{v.tag}</span>

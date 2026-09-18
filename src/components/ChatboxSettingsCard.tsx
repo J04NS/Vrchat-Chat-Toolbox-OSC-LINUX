@@ -140,12 +140,25 @@ export const ChatboxSettingsCard: React.FC<ChatboxSettingsCardProps> = ({
   const isInputFocused = useRef(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Synchronize local input from external config or effective automated template ONLY when user is NOT focused/typing
+  const profiles: ChatboxProfile[] =
+    config.profiles && config.profiles.length > 0 ? config.profiles : builtInList;
+  const activeProfileId = (isAutomationActive && propActiveProfileId)
+    ? propActiveProfileId
+    : (config.activeProfileId || 'profil_3_standard_puls_musik');
+  const activeProfile = profiles.find((p) => p.id === activeProfileId);
+
+  const prevProfileIdRef = useRef(activeProfileId);
+
+  // Synchronize local input ONLY when the profile genuinely changes or on initialization
+  // Never let routine background status polls clobber active typing
   useEffect(() => {
-    if (!isInputFocused.current) {
-      setTemplateInput(effectiveTemplate || config.template || '');
+    if (prevProfileIdRef.current !== activeProfileId) {
+      prevProfileIdRef.current = activeProfileId;
+      if (!isInputFocused.current) {
+        setTemplateInput(effectiveTemplate || activeProfile?.template || config.template || '');
+      }
     }
-  }, [config.template, effectiveTemplate]);
+  }, [activeProfileId, effectiveTemplate, config.template, activeProfile]);
 
   // Clean up debounce timer on unmount
   useEffect(() => {
@@ -155,13 +168,6 @@ export const ChatboxSettingsCard: React.FC<ChatboxSettingsCardProps> = ({
       }
     };
   }, []);
-
-  const profiles: ChatboxProfile[] =
-    config.profiles && config.profiles.length > 0 ? config.profiles : builtInList;
-  const activeProfileId = (isAutomationActive && propActiveProfileId)
-    ? propActiveProfileId
-    : (config.activeProfileId || 'profil_3_standard_puls_musik');
-  const activeProfile = profiles.find((p) => p.id === activeProfileId);
 
   const isTemplateModifiedFromActive =
     activeProfile && activeProfile.template.trim() !== templateInput.trim();
@@ -179,7 +185,7 @@ export const ChatboxSettingsCard: React.FC<ChatboxSettingsCardProps> = ({
     // Debounce config updates so typing is 100% fluid without input freezing or focus loss
     debounceTimer.current = setTimeout(() => {
       onUpdateConfig({ template: val });
-    }, 350);
+    }, 450);
   };
 
   const handleInputFocus = () => {
@@ -197,7 +203,7 @@ export const ChatboxSettingsCard: React.FC<ChatboxSettingsCardProps> = ({
   };
 
   const insertVariable = (varName: string) => {
-    const updated = `${templateInput} ${varName}`.trim();
+    const updated = templateInput.endsWith(' ') || templateInput.length === 0 ? `${templateInput}${varName}` : `${templateInput} ${varName}`;
     setTemplateInput(updated);
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);

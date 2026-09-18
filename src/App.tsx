@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Radio, Terminal, Heart, Music, Sliders, Shield, CheckCircle2, Cpu, Moon, MessageSquare, Globe } from 'lucide-react';
+import { Radio, Terminal, Heart, Music, Sliders, Shield, CheckCircle2, Cpu, Moon, MessageSquare, Globe, Upload } from 'lucide-react';
 import { ChatboxConfig, HeartRateProvider, HeartRateState, MediaState, OscLogEntry, ServerStatusResponse, AppLanguage } from './types';
 import { translations } from './lib/i18n';
 import { ChatboxPreview } from './components/ChatboxPreview';
@@ -8,6 +8,7 @@ import { MediaSourceCard } from './components/MediaSourceCard';
 import { ChatboxSettingsCard } from './components/ChatboxSettingsCard';
 import { OscNetworkCard } from './components/OscNetworkCard';
 import { LinuxGuideModal } from './components/LinuxGuideModal';
+import { ConfigMigrateModal } from './components/ConfigMigrateModal';
 import { HardwareStatsCard } from './components/HardwareStatsCard';
 import { AfkDetectionCard } from './components/AfkDetectionCard';
 import { CustomTextsCard } from './components/CustomTextsCard';
@@ -90,6 +91,7 @@ export default function App() {
   });
 
   const [showLinuxModal, setShowLinuxModal] = useState(false);
+  const [showMigrateModal, setShowMigrateModal] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   const showNotification = (msg: string) => {
@@ -287,6 +289,30 @@ export default function App() {
     } catch {}
   };
 
+  const handleApplyMigratedConfig = async (migratedConfig: ChatboxConfig) => {
+    try {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(migratedConfig),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setConfig(saved);
+        showNotification(
+          currentLang === 'de'
+            ? 'Konfiguration erfolgreich konvertiert & angewendet! 🎉'
+            : 'Configuration successfully converted & applied! 🎉'
+        );
+        fetchStatus();
+      }
+    } catch {
+      showNotification(
+        currentLang === 'de' ? 'Fehler beim Speichern der Konfiguration' : 'Failed to save config'
+      );
+    }
+  };
+
   const isAutomationActive = Boolean(
     config.profileAutomationEnabled ?? serverStatus.profileAutomationEnabled
   );
@@ -361,6 +387,17 @@ export default function App() {
                 <span>DE</span>
               </button>
             </div>
+
+            <button
+              id="btn-header-open-migrate"
+              onClick={() => setShowMigrateModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-950/40 hover:bg-teal-900/50 text-teal-300 text-xs font-semibold transition-all cursor-pointer border border-teal-500/40 hover:border-teal-400"
+              title={currentLang === 'de' ? 'Alte JSON-Konfiguration hochladen & konvertieren' : 'Upload & migrate older JSON config'}
+            >
+              <Upload className="w-3.5 h-3.5 text-teal-400" />
+              <span className="hidden sm:inline">{currentLang === 'de' ? 'Config konvertieren' : 'Migrate Config'}</span>
+              <span className="sm:hidden">{currentLang === 'de' ? 'Migrieren' : 'Migrate'}</span>
+            </button>
 
             <button
               id="btn-open-linux-guide"
@@ -492,6 +529,7 @@ export default function App() {
               onUpdateTarget={(host, port) => handleUpdateConfig({ oscHost: host, oscPort: port })}
               onSendTest={handleSendTestOsc}
               onClearLogs={handleClearLogs}
+              onOpenMigrateModal={() => setShowMigrateModal(true)}
             />
           </div>
         </div>
@@ -511,6 +549,14 @@ export default function App() {
         isOpen={showLinuxModal}
         onClose={() => setShowLinuxModal(false)}
         serverPort={serverStatus.serverPort}
+      />
+
+      {/* Config Migrate & Import Modal */}
+      <ConfigMigrateModal
+        lang={currentLang}
+        isOpen={showMigrateModal}
+        onClose={() => setShowMigrateModal(false)}
+        onApplyMigratedConfig={handleApplyMigratedConfig}
       />
     </div>
   );
