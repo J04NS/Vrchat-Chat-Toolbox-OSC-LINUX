@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Radio, Volume2, VolumeX, Send, Sparkles, AlertTriangle, Clock, RefreshCw, Moon } from 'lucide-react';
+import { Radio, Volume2, VolumeX, Send, Sparkles, AlertTriangle, Clock, RefreshCw, Moon, Power, Mic, MicOff } from 'lucide-react';
 import { formatChatboxMessage, getHeartIcon } from '../lib/formatter';
-import { AfkState, HardwareStats, HeartRateState, MediaState, AppLanguage } from '../types';
+import { AfkState, HardwareStats, HeartRateState, MediaState, SpeechToTextState, AppLanguage } from '../types';
 import { translations } from '../lib/i18n';
 
 interface ChatboxPreviewProps {
@@ -25,7 +25,10 @@ interface ChatboxPreviewProps {
   mediaOnlyWhenPlaying?: boolean;
   isAutomated?: boolean;
   activeProfileName?: string;
+  sttState?: SpeechToTextState;
   onSendManual: (text: string) => Promise<void>;
+  onToggleActive?: (enabled: boolean) => void;
+  onToggleSttListening?: () => void;
 }
 
 export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
@@ -49,7 +52,10 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
   mediaOnlyWhenPlaying,
   isAutomated,
   activeProfileName,
+  sttState,
   onSendManual,
+  onToggleActive,
+  onToggleSttListening,
 }) => {
   const t = translations[lang];
   const [tick, setTick] = useState(0);
@@ -91,6 +97,7 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
     afkOverrideChatbox,
     customTexts,
     currentCustomTextIndex,
+    sttText: sttState?.transcript || sttState?.interimTranscript || sttState?.lastFinalText || '',
   });
 
   const handleTestSend = async () => {
@@ -137,6 +144,52 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {onToggleSttListening && (
+            <button
+              id="btn-toggle-mic-preview"
+              type="button"
+              onClick={onToggleSttListening}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all shadow-md active:scale-95 cursor-pointer border ${
+                sttState?.isListening
+                  ? 'bg-purple-600 hover:bg-purple-500 text-white border-purple-400/50 shadow-purple-950/40 animate-pulse'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700 hover:text-white'
+              }`}
+              title={sttState?.isListening ? t.speechToText.stopMic : t.speechToText.startMic}
+            >
+              {sttState?.isListening ? (
+                <Mic className="w-3.5 h-3.5 text-purple-200 animate-bounce" />
+              ) : (
+                <MicOff className="w-3.5 h-3.5 text-slate-400" />
+              )}
+              <span>
+                {sttState?.isListening
+                  ? (lang === 'de' ? 'Mic aktiv' : 'Mic: ON')
+                  : (lang === 'de' ? 'Mic aus' : 'Mic: OFF')}
+              </span>
+            </button>
+          )}
+
+          {onToggleActive && (
+            <button
+              id="btn-toggle-vrchat-broadcast"
+              type="button"
+              onClick={() => onToggleActive(!isActive)}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all shadow-md active:scale-95 cursor-pointer border ${
+                isActive
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/40 shadow-emerald-950/40'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700 hover:text-white'
+              }`}
+              title={isActive ? t.preview.toggleBroadcastOff : t.preview.toggleBroadcastOn}
+            >
+              <Power className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-200' : 'text-slate-400'}`} />
+              <span>
+                {isActive
+                  ? (lang === 'de' ? 'Senden aktiv' : 'Sending: ON')
+                  : (lang === 'de' ? 'Senden pausiert' : 'Sending: PAUSED')}
+              </span>
+            </button>
+          )}
+
           <button
             id="btn-manual-send-preview"
             onClick={handleTestSend}
@@ -220,6 +273,18 @@ export const ChatboxPreview: React.FC<ChatboxPreviewProps> = ({
                   <span>CPU: {hardwareStats.cpuPercent}%</span>
                   <span>RAM: {hardwareStats.ramPercent}%</span>
                   {hardwareStats.gpuPercent !== undefined && <span>GPU: {hardwareStats.gpuPercent}%</span>}
+                </div>
+              </>
+            )}
+
+            {sttState?.isListening && (
+              <>
+                <span className="text-slate-600">•</span>
+                <div className="flex items-center gap-1.5 text-purple-300 text-[11px] font-medium animate-pulse">
+                  <Mic className="w-3 h-3 text-purple-400" />
+                  <span className="truncate max-w-[140px]">
+                    {sttState.interimTranscript || sttState.transcript || (lang === 'de' ? 'Lauscht...' : 'Listening...')}
+                  </span>
                 </div>
               </>
             )}

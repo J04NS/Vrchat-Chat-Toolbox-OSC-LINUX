@@ -43,6 +43,8 @@ export interface Translations {
     updateInterval: string;
     marqueeActive: string;
     staticText: string;
+    toggleBroadcastOn: string;
+    toggleBroadcastOff: string;
   };
   chatbox: {
     title: string;
@@ -76,6 +78,7 @@ export interface Translations {
       hw: string;
       afkTime: string;
       freitext: string;
+      stt: string;
       clock: string;
       newline: string;
     };
@@ -209,6 +212,43 @@ export interface Translations {
     inputPlaceholder: string;
     activeNowBadge: string;
   };
+  speechToText: {
+    title: string;
+    subtitle: string;
+    enableStt: string;
+    enableSttDesc: string;
+    startMic: string;
+    stopMic: string;
+    micPermissionTitle: string;
+    micPermissionDesc: string;
+    requestMicBtn: string;
+    listeningActive: string;
+    micIdle: string;
+    recognizedText: string;
+    interimText: string;
+    lastSpoken: string;
+    sendModeLabel: string;
+    modeAutoFinal: string;
+    modeAutoFinalDesc: string;
+    modeAutoInstant: string;
+    modeAutoInstantDesc: string;
+    modeManual: string;
+    modeManualDesc: string;
+    languageLabel: string;
+    prefixLabel: string;
+    prefixPlaceholder: string;
+    clearDelayLabel: string;
+    clearDelaySec: string;
+    autoListenOnStart: string;
+    sendNowBtn: string;
+    clearTranscriptBtn: string;
+    sttNotSupported: string;
+    sttNotSupportedDesc: string;
+    micGranted: string;
+    micDenied: string;
+    variableHint: string;
+    templatePlaceholder: string;
+  };
   oscNetwork: {
     title: string;
     subtitle: string;
@@ -279,6 +319,66 @@ export interface Translations {
     resetNotice: string;
     savedNotice: string;
   };
+  nav: {
+    dashboard: string;
+    profiles: string;
+    automation: string;
+    speechToText: string;
+    heartRate: string;
+    media: string;
+    afk: string;
+    hardware: string;
+    customTexts: string;
+    oscNetwork: string;
+  };
+  dashboard: {
+    title: string;
+    subtitle: string;
+    activeProfileTitle: string;
+    activeProfileSubtitle: string;
+    profileSelectPrompt: string;
+    customProfile: string;
+    manageProfilesBtn: string;
+    automationCardTitle: string;
+    automationEnabled: string;
+    automationDisabled: string;
+    automationActiveRule: string;
+    manageAutomationBtn: string;
+    modulesTitle: string;
+    modulesSubtitle: string;
+    moduleOsc: string;
+    moduleOscDesc: string;
+    moduleStt: string;
+    moduleSttDesc: string;
+    moduleHr: string;
+    moduleHrDesc: string;
+    moduleMedia: string;
+    moduleMediaDesc: string;
+    moduleAfk: string;
+    moduleAfkDesc: string;
+    moduleHw: string;
+    moduleHwDesc: string;
+    moduleCustomTexts: string;
+    moduleCustomTextsDesc: string;
+    moduleMarquee: string;
+    moduleMarqueeDesc: string;
+    moduleSound: string;
+    moduleSoundDesc: string;
+    moduleDirectTyping: string;
+    moduleDirectTypingDesc: string;
+    quickConfigure: string;
+    statsSummary: string;
+    packetsSent: string;
+    targetOsc: string;
+    sendTestPacket: string;
+    viewLogs: string;
+    autoActive: string;
+    quickToggle: string;
+    activeNow: string;
+    disabled: string;
+    statusOn: string;
+    statusOff: string;
+  };
 }
 
 export const translations: Record<AppLanguage, Translations> = {
@@ -325,6 +425,8 @@ export const translations: Record<AppLanguage, Translations> = {
       updateInterval: 'Broadcast interval',
       marqueeActive: '↔️ Marquee Ticker Active',
       staticText: '⏹️ Static Message',
+      toggleBroadcastOn: 'Enable VRChat Sending',
+      toggleBroadcastOff: 'Pause VRChat Sending',
     },
     chatbox: {
       title: 'Chatbox Format & Profiles',
@@ -358,6 +460,7 @@ export const translations: Record<AppLanguage, Translations> = {
         hw: 'Hardware HUD',
         afkTime: 'AFK Duration',
         freitext: 'Custom Text',
+        stt: 'Speech-to-Text Voice',
         clock: 'Clock (HH:MM)',
         newline: 'Line Break',
       },
@@ -491,6 +594,43 @@ export const translations: Record<AppLanguage, Translations> = {
       inputPlaceholder: 'Type custom message here...',
       activeNowBadge: 'Displaying Now',
     },
+    speechToText: {
+      title: 'Speech-to-Text (Voice to Chatbox)',
+      subtitle: 'Speak into your microphone in the browser and send recognized voice text to your VRChat Chatbox',
+      enableStt: 'Enable Speech-to-Text Feature',
+      enableSttDesc: 'Captures voice via browser microphone and transmits live transcription to VRChat via OSC.',
+      startMic: 'Start Microphone Listening',
+      stopMic: 'Stop Listening',
+      micPermissionTitle: 'Microphone Permission & Browser Connection',
+      micPermissionDesc: 'Grant browser microphone permission to transcribe your speech directly into VRChat.',
+      requestMicBtn: 'Connect Microphone',
+      listeningActive: 'Microphone Listening...',
+      micIdle: 'Microphone Idle / Off',
+      recognizedText: 'Recognized Voice Text (Final)',
+      interimText: 'Live Hearing (Interim)',
+      lastSpoken: 'Last Spoken',
+      sendModeLabel: 'Chatbox Transmission Trigger',
+      modeAutoFinal: 'Automatic on Pause (Recommended)',
+      modeAutoFinalDesc: 'Sends to VRChat when you stop speaking a sentence.',
+      modeAutoInstant: 'Live Real-Time Streaming',
+      modeAutoInstantDesc: 'Sends every syllable immediately as you speak.',
+      modeManual: 'Manual Click to Send',
+      modeManualDesc: 'Accumulates transcript until you click Send or press Enter.',
+      languageLabel: 'Speech Recognition Language',
+      prefixLabel: 'Chatbox Prefix / Icon',
+      prefixPlaceholder: 'e.g. 🎙️ or 💬',
+      clearDelayLabel: 'Auto-Clear Message Delay',
+      clearDelaySec: 'seconds (0 = keep last message)',
+      autoListenOnStart: 'Automatically start listening when opening app',
+      sendNowBtn: 'Send Speech to VRChat',
+      clearTranscriptBtn: 'Clear Text',
+      sttNotSupported: 'Speech Recognition not supported in this browser',
+      sttNotSupportedDesc: 'Please use Chrome, Edge, Safari, or a Chromium-based browser that supports the Web Speech API.',
+      micGranted: 'Microphone connected and ready',
+      micDenied: 'Microphone access denied. Please allow microphone permissions in browser address bar.',
+      variableHint: 'Use {stt} or {speech} inside your Chatbox profile template to integrate voice recognition seamlessly with heart rate or music.',
+      templatePlaceholder: '🎙️ {stt}',
+    },
     oscNetwork: {
       title: 'VRChat OSC Connection & Network',
       subtitle: 'UDP target parameters and live OSC debug transmission log',
@@ -561,6 +701,66 @@ export const translations: Record<AppLanguage, Translations> = {
       resetNotice: 'Default automation rules restored!',
       savedNotice: 'Automation rules saved!',
     },
+    nav: {
+      dashboard: 'Dashboard',
+      profiles: 'Profiles',
+      automation: 'Automation',
+      speechToText: 'Speech-to-Text',
+      heartRate: 'Heart Rate',
+      media: 'Media',
+      afk: 'AFK Detection',
+      hardware: 'Hardware Stats',
+      customTexts: 'Custom Texts',
+      oscNetwork: 'OSC & Network',
+    },
+    dashboard: {
+      title: 'VRChat OSC Hub Overview',
+      subtitle: 'Real-time chatbox monitor, quick profile switcher, and 1-click module controls',
+      activeProfileTitle: 'Active Profile & Automation',
+      activeProfileSubtitle: 'Switch chatbox templates instantly or let automation handle them',
+      profileSelectPrompt: 'Select Active Profile',
+      customProfile: 'Custom',
+      manageProfilesBtn: 'Manage Profiles & Templates',
+      automationCardTitle: 'Profile Automation Engine',
+      automationEnabled: 'Automation Active (Rules are automatically switching profiles)',
+      automationDisabled: 'Automation Paused (Manual profile selection active)',
+      automationActiveRule: 'Matched Rule',
+      manageAutomationBtn: 'Configure Rules',
+      modulesTitle: 'Live Modules & Quick Controls',
+      modulesSubtitle: 'Toggle individual features on/off with 1-click or jump directly to their settings',
+      moduleOsc: 'OSC Broadcast',
+      moduleOscDesc: 'Master output to VRChat UDP',
+      moduleStt: 'Speech-to-Text (Mic)',
+      moduleSttDesc: 'Voice to Chatbox transcription',
+      moduleHr: 'Heart Rate Monitor',
+      moduleHrDesc: 'HypeRate, Pulsoid & BLE data',
+      moduleMedia: 'Media / Now Playing',
+      moduleMediaDesc: 'playerctl & browser music capture',
+      moduleAfk: 'AFK Detection',
+      moduleAfkDesc: 'Idle timer & VRChat AFK override',
+      moduleHw: 'Hardware HUD',
+      moduleHwDesc: 'CPU & RAM usage telemetry',
+      moduleCustomTexts: 'Custom Text Cycling',
+      moduleCustomTextsDesc: 'Rotating status messages',
+      moduleMarquee: 'Marquee / Scroll',
+      moduleMarqueeDesc: 'Smooth text scrolling ticker',
+      moduleSound: 'Typing Sound',
+      moduleSoundDesc: 'Play audio notification on send',
+      moduleDirectTyping: 'Direct Send',
+      moduleDirectTypingDesc: 'Bypass avatar typing bubble',
+      quickConfigure: 'Configure',
+      statsSummary: 'OSC Transmission Status',
+      packetsSent: 'Packets Broadcasted',
+      targetOsc: 'Target VRChat Address',
+      sendTestPacket: 'Send Test Packet',
+      viewLogs: 'View Packet Logs',
+      autoActive: 'Automated',
+      quickToggle: 'Quick Toggle',
+      activeNow: 'ACTIVE',
+      disabled: 'DISABLED',
+      statusOn: 'ON',
+      statusOff: 'OFF',
+    },
   },
   de: {
     common: {
@@ -605,6 +805,8 @@ export const translations: Record<AppLanguage, Translations> = {
       updateInterval: 'Aktualisierungsintervall',
       marqueeActive: '↔️ Laufschrift aktiv',
       staticText: '⏹️ Statischer Text',
+      toggleBroadcastOn: 'VRChat Senden aktivieren',
+      toggleBroadcastOff: 'VRChat Senden pausieren',
     },
     chatbox: {
       title: 'Chatbox Format & Profile',
@@ -638,6 +840,7 @@ export const translations: Record<AppLanguage, Translations> = {
         hw: 'Hardware Kompakt',
         afkTime: 'AFK Dauer',
         freitext: 'Rotierender Text',
+        stt: 'Spracheingabe (STT)',
         clock: 'Uhrzeit (HH:MM)',
         newline: 'Neue Zeile',
       },
@@ -771,6 +974,43 @@ export const translations: Record<AppLanguage, Translations> = {
       inputPlaceholder: 'Eigener Text hier eingeben...',
       activeNowBadge: 'Wird gerade angezeigt',
     },
+    speechToText: {
+      title: 'Sprache zu Text (Speech-to-Text)',
+      subtitle: 'Sprich in dein Mikrofon im Browser und sende die Spracherkennung direkt in deine VRChat-Chatbox',
+      enableStt: 'Sprache-zu-Text (STT) aktivieren',
+      enableSttDesc: 'Nimmt Sprache über das Browser-Mikrofon auf und überträgt Transkriptionen live via OSC an VRChat.',
+      startMic: 'Mikrofon-Aufnahme starten',
+      stopMic: 'Aufnahme stoppen',
+      micPermissionTitle: 'Mikrofon-Berechtigung & Browser-Verbindung',
+      micPermissionDesc: 'Erlaube dem Browser den Zugriff auf dein Mikrofon, um Gesprochenes in Echtzeit in VRChat anzuzeigen.',
+      requestMicBtn: 'Mikrofon verbinden',
+      listeningActive: 'Mikrofon lauscht aktiv...',
+      micIdle: 'Mikrofon inaktiv / Aus',
+      recognizedText: 'Erkannter Text (Fertiger Satz)',
+      interimText: 'Wird gerade gesprochen (Live)',
+      lastSpoken: 'Zuletzt gesprochen',
+      sendModeLabel: 'Sende-Modus an VRChat',
+      modeAutoFinal: 'Automatisch bei Sprechpause (Empfohlen)',
+      modeAutoFinalDesc: 'Sendet automatisch an VRChat, sobald ein Satz beendet wurde.',
+      modeAutoInstant: 'Live Echtzeit-Streaming',
+      modeAutoInstantDesc: 'Sendet jedes Wort sofort während des Sprechens an die Chatbox.',
+      modeManual: 'Manuell per Klick senden',
+      modeManualDesc: 'Sammelt den gesprochenen Text, bis du auf Senden klickst.',
+      languageLabel: 'Spracherkennungs-Sprache',
+      prefixLabel: 'Chatbox-Präfix / Icon',
+      prefixPlaceholder: 'z.B. 🎙️ oder 💬',
+      clearDelayLabel: 'Auto-Leeren Verzögerung',
+      clearDelaySec: 'Sekunden (0 = Text stehen lassen)',
+      autoListenOnStart: 'Mikrofon beim Start der App automatisch aktivieren',
+      sendNowBtn: 'Sprachtext an VRChat senden',
+      clearTranscriptBtn: 'Text leeren',
+      sttNotSupported: 'Spracherkennung wird von diesem Browser nicht unterstützt',
+      sttNotSupportedDesc: 'Bitte verwende Chrome, Edge, Safari oder einen Chromium-basierten Browser mit Web Speech API.',
+      micGranted: 'Mikrofon verbunden und bereit',
+      micDenied: 'Mikrofon-Zugriff verweigert. Bitte in der Adressleiste des Browsers erlauben.',
+      variableHint: 'Verwende {stt} oder {speech} in deinen Profil-Vorlagen, um Spracheingabe nahtlos mit Puls oder Musik zu kombinieren.',
+      templatePlaceholder: '🎙️ {stt}',
+    },
     oscNetwork: {
       title: 'VRChat OSC-Verbindung & Netzwerk',
       subtitle: 'UDP-Zielparameter und Live-Übertragungsprotokoll',
@@ -840,6 +1080,66 @@ export const translations: Record<AppLanguage, Translations> = {
       resetDefaultRulesBtn: 'Standard-Regeln wiederherstellen',
       resetNotice: 'Standard-Regeln wurden wiederhergestellt!',
       savedNotice: 'Regeln erfolgreich gespeichert!',
+    },
+    nav: {
+      dashboard: 'Dashboard',
+      profiles: 'Profile',
+      automation: 'Automatisierung',
+      speechToText: 'Spracheingabe (STT)',
+      heartRate: 'Puls',
+      media: 'Medien',
+      afk: 'AFK-Erkennung',
+      hardware: 'Hardware HUD',
+      customTexts: 'Custom Texte',
+      oscNetwork: 'OSC & Netzwerk',
+    },
+    dashboard: {
+      title: 'VRChat OSC Hub Übersicht',
+      subtitle: 'Echtzeit-Chatbox-Monitor, Schnell-Profilauswahl und 1-Klick Modul-Schalter',
+      activeProfileTitle: 'Aktives Profil & Automatisierung',
+      activeProfileSubtitle: 'Chatbox-Vorlagen sofort umschalten oder per Automatisierungsregeln steuern',
+      profileSelectPrompt: 'Aktives Profil auswählen',
+      customProfile: 'Benutzerdefiniert',
+      manageProfilesBtn: 'Profile & Vorlagen verwalten',
+      automationCardTitle: 'Profil-Automatisierungs-Engine',
+      automationEnabled: 'Automatisierung aktiv (Regeln wechseln Profile vollautomatisch)',
+      automationDisabled: 'Automatisierung pausiert (Manuelle Profilauswahl aktiv)',
+      automationActiveRule: 'Aktuell greifende Regel',
+      manageAutomationBtn: 'Regeln anpassen',
+      modulesTitle: 'Live-Module & Schnell-Schalter',
+      modulesSubtitle: 'Einzelne Funktionen direkt mit 1 Klick an- oder ausschalten oder zur Konfiguration springen',
+      moduleOsc: 'OSC-Übertragung',
+      moduleOscDesc: 'Hauptausgabe an VRChat UDP',
+      moduleStt: 'Sprache zu Text (Mikrofon)',
+      moduleSttDesc: 'Stimme live in die Chatbox sprechen',
+      moduleHr: 'Pulsmesser',
+      moduleHrDesc: 'HypeRate, Pulsoid & BLE Daten',
+      moduleMedia: 'Medien / Now Playing',
+      moduleMediaDesc: 'playerctl & Browser-Musikerkennung',
+      moduleAfk: 'AFK-Erkennung',
+      moduleAfkDesc: 'Inaktivitäts-Timer & VRChat AFK-Status',
+      moduleHw: 'Hardware HUD',
+      moduleHwDesc: 'CPU- & RAM-Auslastung',
+      moduleCustomTexts: 'Custom-Text-Rotation',
+      moduleCustomTextsDesc: 'Rotierende Status-Texte',
+      moduleMarquee: 'Laufschrift (Marquee)',
+      moduleMarqueeDesc: 'Sanfter Ticker-Scrolltext',
+      moduleSound: 'Tipp-Sound (SFX)',
+      moduleSoundDesc: 'Audio-Benachrichtigung beim Senden',
+      moduleDirectTyping: 'Direktes Senden',
+      moduleDirectTypingDesc: 'Tippblase in VRChat überspringen',
+      quickConfigure: 'Einstellen',
+      statsSummary: 'OSC-Übertragungsstatus',
+      packetsSent: 'Pakete gesendet',
+      targetOsc: 'Ziel-VRChat-Adresse',
+      sendTestPacket: 'Test-Paket senden',
+      viewLogs: 'Paket-Logs ansehen',
+      autoActive: 'Automatisiert',
+      quickToggle: 'Schnell-Schalter',
+      activeNow: 'AKTIV',
+      disabled: 'DEAKTIVIERT',
+      statusOn: 'AN',
+      statusOff: 'AUS',
     },
   },
 };

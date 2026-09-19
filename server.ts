@@ -1105,10 +1105,32 @@ function startPlayerctlFollow() {
   } catch {}
 }
 
-function startAutoMediaPolling() {
+function stopAutoMediaPolling() {
   if (mediaPollTimer) {
     clearInterval(mediaPollTimer);
     mediaPollTimer = null;
+  }
+  if (playerctlFollowProcess) {
+    try {
+      playerctlFollowProcess.kill();
+    } catch {}
+    playerctlFollowProcess = null;
+  }
+}
+
+function clearMediaState() {
+  mediaState.title = '';
+  mediaState.artist = '';
+  mediaState.album = '';
+  mediaState.isPlaying = false;
+  mediaState.sourceName = 'disabled';
+  mediaState.lastUpdated = Date.now();
+}
+
+function startAutoMediaPolling() {
+  stopAutoMediaPolling();
+  if (process.platform !== 'linux' || currentConfig.autoMediaDetection === false) {
+    return;
   }
   mediaPollTimer = setInterval(() => {
     checkNowPlayingViaPlayerctl();
@@ -1305,8 +1327,19 @@ async function startServer() {
     const prevPulsoid = currentConfig.pulsoidToken;
     const body = req.body as Partial<ChatboxConfig>;
 
+    const prevAutoMedia = currentConfig.autoMediaDetection;
     Object.assign(currentConfig, body);
     savePersistedConfig();
+
+    // Handle Media Detection Toggle
+    if (body.autoMediaDetection !== undefined && body.autoMediaDetection !== prevAutoMedia) {
+      if (body.autoMediaDetection === false) {
+        stopAutoMediaPolling();
+        clearMediaState();
+      } else {
+        startAutoMediaPolling();
+      }
+    }
 
     // Re-connect Pulsoid if token changed
     if (body.pulsoidToken !== undefined && body.pulsoidToken !== prevPulsoid) {
@@ -1322,7 +1355,7 @@ async function startServer() {
     }
 
     restartLoop();
-    res.json({ success: true, config: currentConfig });
+    res.json({ success: true, config: currentConfig, mediaState });
   });
 
   // API: Save or Update Profile Automation Rules

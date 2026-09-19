@@ -1,6 +1,6 @@
 {
   "name": "VRChat OSC Chatbox Hub",
-  "description": "VRChat Chatbox OSC Manager for Linux & Web with HypeRate / Pulsoid heart rate, media sources, hardware stats, and customizable web interface.",
-  "requestFramePermissions": [],
+  "description": "VRChat Chatbox OSC Manager for Linux & Web with Speech-to-Text (Voice to Chatbox), HypeRate / Pulsoid heart rate, media sources, hardware stats, and customizable web interface.",
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

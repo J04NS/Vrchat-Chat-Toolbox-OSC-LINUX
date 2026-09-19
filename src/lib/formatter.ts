@@ -53,6 +53,7 @@ export interface FormatterOptions {
   afkOverrideChatbox?: boolean;
   customTexts?: string[];
   currentCustomTextIndex?: number;
+  sttText?: string;
 }
 
 export function formatChatboxMessage(
@@ -105,6 +106,7 @@ export function formatChatboxMessage(
     afkOverrideChatbox = true,
     customTexts = [],
     currentCustomTextIndex = 0,
+    sttText = '',
   } = options;
 
   const now = new Date();
@@ -198,6 +200,11 @@ export function formatChatboxMessage(
     // AFK placeholders
     .replace(/\{afk_time\}/g, afkTimeStr)
     .replace(/\{afk_status\}/g, afkStatusStr)
+    // Speech-to-Text placeholders
+    .replace(/\{stt\}/gi, sttText || '')
+    .replace(/\{speech\}/gi, sttText || '')
+    .replace(/\{speech_text\}/gi, sttText || '')
+    .replace(/\{voice\}/gi, sttText || '')
     // Rotating Custom Texts & Custom Status
     .replace(/\{custom_text\}/gi, activeRotatingText || customStatus || '')
     .replace(/\{customtext\}/gi, activeRotatingText || customStatus || '')

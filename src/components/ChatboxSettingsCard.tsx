@@ -219,6 +219,7 @@ export const ChatboxSettingsCard: React.FC<ChatboxSettingsCardProps> = ({
     onUpdateConfig({
       template: profile.template,
       activeProfileId: profile.id,
+      profileAutomationEnabled: false,
     });
     showFeedback(`${t.chatbox.profileLoadedNotice} ("${profile.name}")`);
   };
@@ -641,9 +642,9 @@ export const ChatboxSettingsCard: React.FC<ChatboxSettingsCardProps> = ({
         </div>
 
         {/* Controls Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-800">
+        <div className="pt-3 border-t border-slate-800">
           {/* Interval */}
-          <div>
+          <div className="max-w-sm">
             <div className="flex justify-between items-center mb-1">
               <label className="text-xs font-medium text-slate-300">{t.chatbox.sendInterval}</label>
               <span className="text-xs font-mono text-blue-400 font-semibold">
@@ -660,20 +661,6 @@ export const ChatboxSettingsCard: React.FC<ChatboxSettingsCardProps> = ({
               onChange={(e) => onUpdateConfig({ updateIntervalMs: Number(e.target.value) })}
               className="w-full accent-blue-500 cursor-pointer h-2 bg-slate-800 rounded-lg"
             />
-          </div>
-
-          {/* Quick Checkbox */}
-          <div className="flex flex-col justify-center">
-            <label className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
-              <input
-                id="checkbox-bypass-typing"
-                type="checkbox"
-                checked={config.bypassTypingIndicator}
-                onChange={(e) => onUpdateConfig({ bypassTypingIndicator: e.target.checked })}
-                className="w-4 h-4 rounded accent-blue-500 cursor-pointer"
-              />
-              <span className="text-xs text-slate-200">{t.chatbox.bypassTyping}</span>
-            </label>
           </div>
         </div>
       </div>

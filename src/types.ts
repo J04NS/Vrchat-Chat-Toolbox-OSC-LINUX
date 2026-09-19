@@ -52,6 +52,21 @@ export interface AfkState {
   lastMovementTime?: number;
 }
 
+export interface SpeechToTextState {
+  isListening: boolean;
+  transcript: string;
+  interimTranscript: string;
+  lastFinalText: string;
+  isSupported: boolean;
+  language: string;
+  sendMode: 'auto_final' | 'auto_instant' | 'manual';
+  clearDelaySec: number;
+  prefix: string;
+  lastSpokenTime: number;
+  error?: string;
+  micPermission: 'granted' | 'prompt' | 'denied' | 'unknown';
+}
+
 export interface ChatboxProfile {
   id: string;
   name: string;
@@ -98,6 +113,15 @@ export interface ChatboxConfig {
   // Freitexte (rotating messages)
   customTexts?: string[];
   customTextIntervalSec?: number;
+
+  // Speech-to-Text (Voice to Chatbox)
+  sttEnabled?: boolean;
+  sttLanguage?: string; // 'de-DE' | 'en-US' etc.
+  sttSendMode?: 'auto_final' | 'auto_instant' | 'manual';
+  sttPrefix?: string;
+  sttTemplate?: string;
+  sttClearDelaySec?: number;
+  sttAutoListenOnStart?: boolean;
 
   // Automated Profile Conditions / Rules
   profileAutomationEnabled?: boolean;
