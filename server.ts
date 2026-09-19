@@ -1558,7 +1558,18 @@ async function startServer() {
   // Vite middleware in dev or static files in production
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        watch: {
+          ignored: [
+            '**/chatbox-config.json',
+            '**/chatbox-config.json*',
+            '**/.data/**',
+            '**/dist/**',
+            '**/*.log',
+          ],
+        },
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);

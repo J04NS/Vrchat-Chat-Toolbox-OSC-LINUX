@@ -19,8 +19,16 @@ export default defineConfig(() => {
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      // Ignore persisted config and data files so server writes never trigger Vite page reloads
+      watch: {
+        ignored: [
+          '**/chatbox-config.json',
+          '**/chatbox-config.json*',
+          '**/.data/**',
+          '**/dist/**',
+          '**/*.log',
+        ],
+      },
     },
   };
 });
